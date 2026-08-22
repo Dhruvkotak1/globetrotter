@@ -10,6 +10,9 @@ ENV/
 .venv
 
 # Database & Environment
+*.db
+*.sqlite
+*.sqlite3
 *.env
 .env
 instance/
