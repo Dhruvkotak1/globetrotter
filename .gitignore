@@ -1,0 +1,56 @@
+# =========================
+# Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+ENV/
+Scripts/
+
+# =========================
+# Python Cache
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.local
+
+# =========================
+# Databases
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+instance/
+data/globetrotter.db
+
+# =========================
+# User Uploads
+# =========================
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# =========================
+# OS Generated Files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =========================
+# IDEs and Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,21 @@
+# Core Web Framework
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# Database & ORM (Handles SQLite seamlessly)
+Flask-SQLAlchemy>=3.1.1
+SQLAlchemy>=2.0.0
+
+# Authentication & Session Management
+Flask-Login>=0.6.3
+
+# Forms & Validation
+Flask-WTF>=1.2.1
+WTForms>=3.1.0
+email-validator>=2.1.0
+
+# Environment Variables (for secure SECRET_KEY handling)
+python-dotenv>=1.0.0
+
+# Image handling (if users upload profile/trip covers)
+Pillow>=10.0.0
