@@ -12,6 +12,17 @@
   --accent-emerald: #10b981;
   --accent-rose: #f43f5e;
   
+  /* Indian Aesthetic Palette */
+  --accent-saffron: #f97316;
+  --accent-saffron-hover: #ea580c;
+  --accent-marigold: #f59e0b;
+  --accent-peacock: #0f766e;
+  --accent-royal-indigo: #1e1b4b;
+  --indian-gradient: linear-gradient(135deg, #ea580c 0%, #f59e0b 45%, #06b6d4 100%);
+  --heritage-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f766e 100%);
+  --saffron-light: #fff7ed;
+  --saffron-border: #fed7aa;
+  
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
   --bg-glass: rgba(255, 255, 255, 0.85);
@@ -1379,4 +1390,61 @@ textarea.form-control {
   align-items: center;
   gap: 0.25rem;
 }
+
+/* ==========================================================================
+   Indian Cultural Accents & Heritage Aesthetic Styles
+   ========================================================================== */
+.badge-india {
+  background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+}
+
+.badge-region-india {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-weight: 700;
+}
+
+.indian-gradient-text {
+  background: linear-gradient(135deg, #ea580c 0%, #d97706 45%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.namaste-banner {
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #f0fdf4 100%);
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.heritage-card {
+  border-top: 3.5px solid #f97316;
+  position: relative;
+}
+
+.tag-india-heritage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #ffedd5;
+}
+
 

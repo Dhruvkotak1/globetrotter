@@ -26,7 +26,7 @@
                 <label class="form-label" for="title">Trip Name *</label>
                 <div class="input-icon-wrapper">
                     <i class="fa-solid fa-suitcase input-icon"></i>
-                    <input type="text" id="title" name="title" class="form-control" placeholder="e.g. European Summer Odyssey, Tokyo & Kyoto Adventure..." required autofocus>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Royal Rajasthan Heritage, Kerala Backwaters & Tea Trail, Ladakh Expedition..." required autofocus>
                 </div>
             </div>
 
@@ -52,12 +52,12 @@
             <!-- Budget & Visibility -->
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label" for="target_budget">Target Budget (USD $)</label>
+                    <label class="form-label" for="target_budget">Target Budget (Estimated $ / ₹)</label>
                     <div class="input-icon-wrapper">
-                        <i class="fa-solid fa-dollar-sign input-icon"></i>
-                        <input type="number" step="10" min="0" id="target_budget" name="target_budget" class="form-control" placeholder="e.g. 2500">
+                        <i class="fa-solid fa-wallet input-icon"></i>
+                        <input type="number" step="10" min="0" id="target_budget" name="target_budget" class="form-control" placeholder="e.g. 1200">
                     </div>
-                    <span class="form-help">Optional. Used to track expenses against your goal.</span>
+                    <span class="form-help">Optional. Track transport, stay, activities, and dining against your goal.</span>
                 </div>
 
                 <div class="form-group">
@@ -73,28 +73,32 @@
             <!-- Description -->
             <div class="form-group">
                 <label class="form-label" for="description">Trip Description & Travel Notes</label>
-                <textarea id="description" name="description" class="form-control" placeholder="What are the goals of this trip? Any special occasions, must-try cuisines, or travel companions?"></textarea>
+                <textarea id="description" name="description" class="form-control" placeholder="Goals of this journey, must-visit heritage spots, local cuisines to try (e.g. Rajasthani thali, coastal curry), or travel companions..."></textarea>
             </div>
 
             <!-- Cover Photo Options -->
             <div class="form-group">
                 <label class="form-label">Trip Cover Photo</label>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80" checked style="display: none;" onchange="updateCoverPreview(this.value)">
-                        <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid var(--primary);" class="cover-preset-thumb">
+                    <!-- Jaipur Hawa Mahal / Fort -->
+                    <label style="cursor: pointer;" title="Jaipur Royal Heritage">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=80" checked style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid var(--primary);" class="cover-preset-thumb">
                     </label>
-                    <label style="cursor: pointer;">
+                    <!-- Kerala Backwaters -->
+                    <label style="cursor: pointer;" title="Kerala Backwaters">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
+                    </label>
+                    <!-- Taj Mahal -->
+                    <label style="cursor: pointer;" title="Agra Taj Mahal">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
+                    </label>
+                    <!-- Tokyo / Global -->
+                    <label style="cursor: pointer;" title="Tokyo Japan">
                         <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
                         <img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
-                        <img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
-                        <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
                     </label>
                 </div>
                 

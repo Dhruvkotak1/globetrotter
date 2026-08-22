@@ -17,8 +17,8 @@
         <form action="{{ url_for('itinerary.city_search') }}" method="GET" style="display: flex; flex-direction: column; gap: 1rem;">
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <div class="input-icon-wrapper" style="flex: 2; min-width: 260px;">
-                    <i class="fa-solid fa-magnifying-glass input-icon"></i>
-                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by city or country name...">
+                    <i class="fa-solid fa-magnifying-glass input-icon" style="color: var(--accent-saffron);"></i>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by city or country (e.g. Jaipur, Goa, Ladakh, Tokyo, Paris...)">
                 </div>
 
                 <div style="flex: 1; min-width: 160px;">
@@ -33,7 +33,7 @@
                 <div style="flex: 1; min-width: 160px;">
                     <select name="cost" class="form-control">
                         <option value="">Any Cost Index</option>
-                        <option value="2.0" {% if selected_cost == '2.0' %}selected{% endif %}>Budget ($)</option>
+                        <option value="2.0" {% if selected_cost == '2.0' %}selected{% endif %}>Budget ($ / ₹)</option>
                         <option value="3.5" {% if selected_cost == '3.5' %}selected{% endif %}>Moderate ($$)</option>
                         <option value="5.0" {% if selected_cost == '5.0' %}selected{% endif %}>Luxury ($$$)</option>
                     </select>
@@ -48,7 +48,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.5rem; background: linear-gradient(135deg, #ea580c 0%, #4f46e5 100%); border: none;">
                     <i class="fa-solid fa-filter"></i> Apply Filters
                 </button>
             </div>
@@ -59,10 +59,12 @@
     {% if cities %}
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
             {% for city in cities %}
-            <div class="card card-lift" style="display: flex; flex-direction: row; flex-wrap: wrap; overflow: hidden; align-items: center;">
+            <div class="card card-lift {% if city.country == 'India' %}heritage-card{% endif %}" style="display: flex; flex-direction: row; flex-wrap: wrap; overflow: hidden; align-items: center;">
                 <div style="width: 260px; height: 180px; flex-shrink: 0; position: relative;">
                     <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <span class="badge badge-category" style="position: absolute; top: 10px; left: 10px;">{{ city.region }}</span>
+                    <span class="badge {% if city.country == 'India' %}badge-india{% else %}badge-category{% endif %}" style="position: absolute; top: 10px; left: 10px;">
+                        {% if city.country == 'India' %}🇮🇳 India Heritage{% else %}{{ city.region }}{% endif %}
+                    </span>
                 </div>
 
                 <div style="flex: 1; min-width: 280px; padding: 1.5rem;">

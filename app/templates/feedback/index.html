@@ -131,11 +131,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="fb_name">Your Name *</label>
-                        <input type="text" id="fb_name" name="name" class="form-control" placeholder="e.g. Priya Sharma" required>
+                        <input type="text" id="fb_name" name="name" class="form-control" placeholder="e.g. Priya Patel" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="fb_email">Email Address *</label>
-                        <input type="email" id="fb_email" name="email" class="form-control" placeholder="priya@example.com" required>
+                        <input type="email" id="fb_email" name="email" class="form-control" placeholder="priya.patel@example.com" required>
                     </div>
                 </div>
                 {% else %}
@@ -162,7 +162,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="fb_destination">Tag Destination (Optional)</label>
-                        <input type="text" id="fb_destination" name="destination_name" class="form-control" placeholder="e.g. Tokyo, Japan / Paris / Goa" list="citiesList">
+                        <input type="text" id="fb_destination" name="destination_name" class="form-control" placeholder="e.g. Jaipur, India / Goa / Varanasi / Ladakh / Tokyo" list="citiesList">
                         <datalist id="citiesList">
                             {% for c in cities %}
                                 <option value="{{ c.name }}, {{ c.country }}">
@@ -174,12 +174,12 @@
                 <!-- Review Title & Message -->
                 <div class="form-group">
                     <label class="form-label" for="fb_title">Review Title *</label>
-                    <input type="text" id="fb_title" name="title" class="form-control" placeholder="e.g. Unforgettable 7-Day Japan Journey!" required>
+                    <input type="text" id="fb_title" name="title" class="form-control" placeholder="e.g. Magical Sunset over Varanasi Ghats & Royal Jaipur Forts!" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="fb_message">Your Feedback / Travel Story *</label>
-                    <textarea id="fb_message" name="message" class="form-control" rows="3" placeholder="Tell us about the highlights, budget tips, or your experience using GlobeTrotter..." required></textarea>
+                    <textarea id="fb_message" name="message" class="form-control" rows="3" placeholder="Tell us about the highlights, budget tips in INR/Forex, or your experience using GlobeTrotter..." required></textarea>
                 </div>
 
                 <!-- Real-Time Photo Capture Component -->

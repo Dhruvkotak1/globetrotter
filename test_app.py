@@ -74,7 +74,7 @@ class GlobeTrotterTestCase(unittest.TestCase):
         # Screen 4: Trips list
         res = self.client.get('/trips/')
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Wonders of Japan', res.data)
+        self.assertIn(b'Royal Rajasthan', res.data)
 
         # Screen 3: Create Trip Page
         res = self.client.get('/trips/new')
@@ -124,7 +124,7 @@ class GlobeTrotterTestCase(unittest.TestCase):
         self.assertIn(b'Explore Shared Travel Itineraries', res.data)
 
         # Public / Shared Itinerary View (Screen 11)
-        res = self.client.get('/trip/shared/japan-golden-route-2026')
+        res = self.client.get('/trip/shared/royal-rajasthan-jaipur-udaipur')
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Shared Travel Plan', res.data)
 

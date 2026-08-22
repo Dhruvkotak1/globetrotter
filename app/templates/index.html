@@ -4,32 +4,47 @@
 
 {% block content %}
 <!-- Screen 2: Dashboard / Home Screen -->
-<section class="hero-section">
+<section class="hero-section" style="background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);">
     <div class="container" style="display: flex; flex-direction: column; align-items: center;">
-        <span class="badge badge-ongoing" style="margin-bottom: 1.25rem;">
-            <i class="fa-solid fa-sparkles"></i> The Next-Gen Travel Planner
+        <span class="badge badge-india" style="margin-bottom: 1.25rem; padding: 0.45rem 1.1rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-om" style="margin-right: 0.35rem;"></i> Namaste &bull; Discover Incredible India & The World
         </span>
         <h1 class="hero-title">
             Dream, Design, & Organize <br>
-            <span class="hero-gradient-text">Your Perfect Journey</span>
+            <span class="indian-gradient-text">Your Perfect Journey</span>
         </h1>
         <p class="hero-subtitle">
-            Plan multi-city itineraries, organize activities, track estimated budgets in real-time, and share travel plans with an inspiring community.
+            Plan multi-city itineraries across royal Indian heritage forts, serene backwaters, Himalayan trails, and iconic world destinations.
         </p>
 
-        <!-- Search Bar -->
-        <form action="{{ url_for('itinerary.city_search') }}" method="GET" class="search-bar-hero" style="margin-bottom: 2rem;">
-            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 0.75rem;"></i>
-            <input type="text" name="q" placeholder="Where do you want to explore? (e.g. Tokyo, Paris, Bali, Rome...)">
-            <button type="submit" class="btn btn-primary">Search</button>
+        <!-- Search Bar with Indian + Global placeholders -->
+        <form action="{{ url_for('itinerary.city_search') }}" method="GET" class="search-bar-hero" style="margin-bottom: 1.25rem;">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--accent-saffron); margin-right: 0.75rem;"></i>
+            <input type="text" name="q" placeholder="Where do you want to explore? (e.g. Jaipur, Goa, Ladakh, Varanasi, Paris, Tokyo...)">
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #ea580c 0%, #4f46e5 100%); border: none;">Search</button>
         </form>
 
+        <!-- Quick Destination Search Chips -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem;">
+            <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; align-self: center;">Popular:</span>
+            <a href="{{ url_for('itinerary.city_search', q='Jaipur') }}" class="preset-chip" style="background: #fff7ed; color: #c2410c; border-color: #fed7aa;">🏰 Jaipur</a>
+            <a href="{{ url_for('itinerary.city_search', q='Goa') }}" class="preset-chip" style="background: #fff7ed; color: #c2410c; border-color: #fed7aa;">🏖️ Goa</a>
+            <a href="{{ url_for('itinerary.city_search', q='Ladakh') }}" class="preset-chip" style="background: #fff7ed; color: #c2410c; border-color: #fed7aa;">🏔️ Ladakh</a>
+            <a href="{{ url_for('itinerary.city_search', q='Varanasi') }}" class="preset-chip" style="background: #fff7ed; color: #c2410c; border-color: #fed7aa;">🕉️ Varanasi</a>
+            <a href="{{ url_for('itinerary.city_search', q='Kerala') }}" class="preset-chip" style="background: #fff7ed; color: #c2410c; border-color: #fed7aa;">🌴 Kerala</a>
+            <a href="{{ url_for('itinerary.city_search', q='Tokyo') }}" class="preset-chip">🗼 Tokyo</a>
+            <a href="{{ url_for('itinerary.city_search', q='Paris') }}" class="preset-chip">🥐 Paris</a>
+        </div>
+
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-lg">
+            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);">
                 <i class="fa-solid fa-plus-circle"></i> Plan a New Trip
             </a>
+            <a href="{{ url_for('currency.converter') }}" class="btn btn-secondary btn-lg">
+                <i class="fa-solid fa-money-bill-transfer" style="color: var(--accent-saffron);"></i> Abroad Currency Converter
+            </a>
             <a href="{{ url_for('community.index') }}" class="btn btn-secondary btn-lg">
-                <i class="fa-solid fa-compass"></i> Browse Community Itineraries
+                <i class="fa-solid fa-compass"></i> Community Itineraries
             </a>
         </div>
     </div>
@@ -41,7 +56,7 @@
     <div class="container">
         <div class="section-header">
             <div>
-                <h2 class="section-title">Your Recent Trips</h2>
+                <h2 class="section-title">Your Travel Plans</h2>
                 <p style="color: var(--text-secondary); font-size: 0.95rem;">Pick up where you left off</p>
             </div>
             <a href="{{ url_for('trips.my_trips') }}" class="btn btn-secondary btn-sm">
@@ -78,13 +93,13 @@
 </section>
 {% endif %}
 
-<!-- Top Regional Selections / Recommended Cities -->
+<!-- Top Regional Selections & Featured Indian / Global Destinations -->
 <section style="padding: 3.5rem 0;">
     <div class="container">
         <div class="section-header">
             <div>
-                <h2 class="section-title">Top Regional Selections & Popular Cities</h2>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Curated global destinations with cost estimates and local activities</p>
+                <h2 class="section-title">Top Destinations in India & Worldwide</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Curated royal heritage palaces, backwaters, mountain passes, and global cultural capitals</p>
             </div>
             <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">
                 Explore All Destinations <i class="fa-solid fa-arrow-right"></i>
@@ -93,20 +108,24 @@
 
         <div class="grid-4">
             {% for city in popular_cities %}
-            <div class="card card-lift" style="display: flex; flex-direction: column;">
+            <div class="card card-lift {% if city.country == 'India' %}heritage-card{% endif %}" style="display: flex; flex-direction: column;">
                 <div style="position: relative; height: 160px; overflow: hidden;">
                     <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
                     <span class="badge badge-cost" style="position: absolute; top: 10px; right: 10px;">
-                        Cost: ${{ "%.0f"|format(city.cost_index * 45) }}/day
+                        {% if city.country == 'India' %}
+                            Est: ₹{{ "%.0f"|format(city.cost_index * 1500) }}/day
+                        {% else %}
+                            Est: ${{ "%.0f"|format(city.cost_index * 45) }}/day
+                        {% endif %}
                     </span>
-                    <span class="badge badge-category" style="position: absolute; bottom: 10px; left: 10px;">
-                        {{ city.region }}
+                    <span class="badge {% if city.country == 'India' %}badge-india{% else %}badge-category{% endif %}" style="position: absolute; bottom: 10px; left: 10px;">
+                        {% if city.country == 'India' %}🇮🇳 India Heritage{% else %}{{ city.region }}{% endif %}
                     </span>
                 </div>
                 <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
                     <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">{{ city.name }}</h3>
                     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">
-                        <i class="fa-solid fa-location-dot"></i> {{ city.country }}
+                        <i class="fa-solid fa-location-dot" style="color: var(--accent-saffron);"></i> {{ city.country }}
                     </p>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                         {{ city.description }}
