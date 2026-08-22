@@ -85,7 +85,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const tripStart = "{{ trip.start_date.isoformat() }}";
         const tripEnd = "{{ trip.end_date.isoformat() }}";
-        const stopsData = {{ trip.stops|map(attribute='to_dict')|list|tojson }};
+        const stopsData = {{ stops_data|tojson }};
         
         initTripCalendar(tripStart, tripEnd, stopsData);
     });

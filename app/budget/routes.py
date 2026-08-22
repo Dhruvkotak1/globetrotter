@@ -109,29 +109,40 @@ def get_budget_data(trip_id):
 def add_expense(trip_id):
     trip = Trip.query.get_or_404(trip_id)
     if trip.user_id != current_user.id and not current_user.is_admin:
-        return jsonify({'error': 'Unauthorized'}), 403
+        if request.is_json:
+            return jsonify({'error': 'Unauthorized'}), 403
+        flash('You do not have permission to modify this trip.', 'warning')
+        return redirect(url_for('budget.view_budget', trip_id=trip.id))
         
-    data = request.get_json() or request.form
-    title = data.get('title', '').strip()
+    data = request.get_json(silent=True) or request.form
+    title = (data.get('title') or '').strip()
     category = data.get('category', 'Other')
     amount_val = data.get('amount', 0)
     date_str = data.get('expense_date')
-    notes = data.get('notes', '').strip()
+    notes = (data.get('notes') or '').strip()
     
     if not title:
-        return jsonify({'error': 'Expense title is required'}), 400
+        if request.is_json:
+            return jsonify({'error': 'Expense title is required'}), 400
+        flash('Expense title is required.', 'danger')
+        return redirect(url_for('budget.view_budget', trip_id=trip.id))
         
     try:
         amount = float(amount_val)
-    except ValueError:
-        return jsonify({'error': 'Invalid amount'}), 400
+    except (ValueError, TypeError):
+        if request.is_json:
+            return jsonify({'error': 'Invalid amount entered'}), 400
+        flash('Please enter a valid expense amount.', 'danger')
+        return redirect(url_for('budget.view_budget', trip_id=trip.id))
         
     exp_date = None
     if date_str:
         try:
-            exp_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            exp_date = datetime.strptime(str(date_str).strip(), '%Y-%m-%d').date()
         except ValueError:
-            pass
+            exp_date = trip.start_date
+    else:
+        exp_date = trip.start_date
             
     expense = CustomExpense(
         trip_id=trip.id,
@@ -144,11 +155,12 @@ def add_expense(trip_id):
     db.session.add(expense)
     db.session.commit()
     
-    # If requested via form submit, redirect back
     if request.is_json:
         return jsonify({'success': True, 'expense': expense.to_dict(), 'total_cost': trip.total_cost})
     else:
-        flash(f'Expense "${amount:,.2f}" for {title} added successfully.', 'success')
+        from app.utils import format_user_currency
+        formatted_cost = format_user_currency(amount)
+        flash(f'Expense "{title}" ({formatted_cost}) added successfully.', 'success')
         return redirect(url_for('budget.view_budget', trip_id=trip.id))
 
 
@@ -158,7 +170,10 @@ def delete_expense(expense_id):
     exp = CustomExpense.query.get_or_404(expense_id)
     trip = exp.trip
     if trip.user_id != current_user.id and not current_user.is_admin:
-        return jsonify({'error': 'Unauthorized'}), 403
+        if request.is_json or request.method == 'DELETE':
+            return jsonify({'error': 'Unauthorized'}), 403
+        flash('You do not have permission to modify this expense.', 'warning')
+        return redirect(url_for('budget.view_budget', trip_id=trip.id))
         
     db.session.delete(exp)
     db.session.commit()
@@ -166,5 +181,5 @@ def delete_expense(expense_id):
     if request.is_json or request.method == 'DELETE':
         return jsonify({'success': True, 'message': 'Expense deleted', 'total_cost': trip.total_cost})
     else:
-        flash('Expense deleted.', 'info')
+        flash('Custom expense removed successfully.', 'info')
         return redirect(url_for('budget.view_budget', trip_id=trip.id))

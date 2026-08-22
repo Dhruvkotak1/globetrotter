@@ -245,3 +245,48 @@ def convert_currency(amount, from_curr='INR', to_curr='USD'):
         effective_rate = (to_rate / from_info['rate']) if from_curr != 'INR' and from_info['rate'] > 0 else to_rate
         
     return round(converted, 2), effective_rate
+
+
+def get_user_preferred_currency():
+    """Returns the active user's preferred currency code (e.g. 'INR', 'USD', 'EUR'). Default is 'INR'."""
+    try:
+        from flask_login import current_user
+        from flask import session
+        if current_user and current_user.is_authenticated and getattr(current_user, 'preferred_currency', None):
+            return current_user.preferred_currency.upper()
+        return session.get('preferred_currency', 'INR').upper()
+    except Exception:
+        return 'INR'
+
+
+def format_user_currency(value, curr_code=None):
+    """
+    Formats a base numerical price according to the user's preferred currency (Default: INR ₹).
+    Converts base USD stored value to the target preferred currency and formats with the proper symbol.
+    """
+    if curr_code is None:
+        curr_code = get_user_preferred_currency()
+        
+    curr_code = (curr_code or 'INR').upper()
+    curr_info = INR_EXCHANGE_RATES.get(curr_code, INR_EXCHANGE_RATES['INR'])
+    symbol = curr_info['symbol']
+    
+    try:
+        val_usd = float(value or 0.0)
+    except (ValueError, TypeError):
+        val_usd = 0.0
+        
+    # Convert base USD stored amount to target currency:
+    # (1 USD = ~83.3333 INR)
+    val_in_inr = val_usd * 83.333333
+    converted_val = val_in_inr * curr_info['rate']
+    
+    if curr_code == 'INR':
+        if converted_val >= 100000:
+            return f"₹{converted_val:,.0f}"
+        return f"₹{converted_val:,.2f}"
+    elif curr_code in ('JPY', 'KRW', 'VND', 'IDR'):
+        return f"{symbol}{converted_val:,.0f}"
+    else:
+        return f"{symbol}{converted_val:,.2f}"
+

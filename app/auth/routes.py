@@ -186,17 +186,11 @@ def profile():
         current_user.phone = request.form.get('phone', '').strip()
         current_user.city = request.form.get('city', '').strip()
         current_user.country = request.form.get('country', '').strip()
-        current_user.bio = request.form.get('bio', '').strip()
-        
-        # New password update if supplied
-        new_password = request.form.get('new_password', '')
-        if new_password:
-            if len(new_password) < 6:
-                flash('New password must be at least 6 characters long.', 'warning')
-            else:
-                current_user.set_password(new_password)
-                flash('Password updated successfully.', 'success')
-                
+        # Preferred currency update
+        currency_pref = request.form.get('preferred_currency', 'INR').strip().upper()
+        if currency_pref:
+            current_user.preferred_currency = currency_pref
+
         # Handle avatar change (live camera snapshot or file upload)
         new_avatar = save_image_from_request(
             file_field='avatar',
@@ -207,7 +201,7 @@ def profile():
             current_user.avatar = new_avatar
                 
         db.session.commit()
-        flash('Profile settings updated successfully!', 'success')
+        flash('Profile settings and currency preference updated successfully!', 'success')
         return redirect(url_for('auth.profile'))
         
     # Get user trips segregated into preplanned and completed/previous
@@ -221,8 +215,27 @@ def profile():
         user=current_user,
         preplanned_trips=preplanned_trips,
         previous_trips=previous_trips,
-        saved_destinations=saved_dests
+        saved_dests=saved_dests
     )
+
+
+@auth_bp.route('/set-currency', methods=['POST', 'GET'])
+def set_currency():
+    """Quickly switch preferred display currency for active session and user profile."""
+    from flask import session
+    currency_code = (request.values.get('currency') or request.values.get('currency_code') or 'INR').strip().upper()
+    
+    if current_user.is_authenticated:
+        current_user.preferred_currency = currency_code
+        db.session.commit()
+        
+    session['preferred_currency'] = currency_code
+    
+    next_url = request.values.get('next') or request.referrer or url_for('index')
+    if request.is_json:
+        return jsonify({'success': True, 'currency': currency_code})
+    flash(f'Display currency updated to {currency_code}.', 'info')
+    return redirect(next_url)
 
 
 @auth_bp.route('/profile/delete-account', methods=['POST'])

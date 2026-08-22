@@ -88,7 +88,8 @@ def trip_calendar(trip_id):
         flash('This itinerary is private.', 'warning')
         return redirect(url_for('trips.my_trips') if current_user.is_authenticated else url_for('auth.login'))
         
-    return render_template('itinerary/calendar.html', trip=trip)
+    stops_data = [stop.to_dict() for stop in trip.stops]
+    return render_template('itinerary/calendar.html', trip=trip, stops_data=stops_data)
 
 
 @itinerary_bp.route('/cities')

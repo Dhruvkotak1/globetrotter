@@ -20,19 +20,27 @@
                     </div>
                     <div>
                         <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">{{ user.full_name }}</h1>
-                        <p style="color: var(--text-muted); font-size: 0.95rem;">
-                            <i class="fa-solid fa-at"></i> {{ user.username }} &bull; 
-                            <i class="fa-solid fa-location-dot"></i> {{ user.city or 'Earth' }}{% if user.country %}, {{ user.country }}{% endif %}
-                        </p>
+                      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
+                        <i class="fa-solid fa-location-dot" style="color: var(--accent-saffron);"></i> {{ user.city or 'New Delhi' }}, {{ user.country or 'India' }} &bull; 
+                        <i class="fa-regular fa-envelope"></i> {{ user.email }}
+                    </p>
+                    
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <span class="badge badge-india" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+                            <i class="fa-solid fa-coins"></i> Preferred Currency: <strong>{{ user.preferred_currency or 'INR' }} ({{ user_currency_symbol }})</strong>
+                        </span>
+                        <span class="badge badge-category" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+                            <i class="fa-regular fa-calendar-check"></i> Member since {{ user.created_at|date_format('%B %Y') }}
+                        </span>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 0.75rem;">
-                    <button onclick="openModal('editProfileModal')" class="btn btn-primary">
-                        <i class="fa-solid fa-pen-to-square"></i> Edit Profile & Settings
+                <div style="display: flex; gap: 0.75rem; align-self: flex-start; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('editProfileModal')">
+                        <i class="fa-solid fa-gear"></i> Edit Profile & Currency
                     </button>
-                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-secondary">
-                        <i class="fa-solid fa-plus"></i> Plan Trip
+                    <a href="{{ url_for('currency.converter') }}" class="btn btn-outline btn-sm">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Converter
                     </a>
                 </div>
             </div>
@@ -229,9 +237,32 @@
                     <input type="text" id="edit_phone" name="phone" class="form-control" value="{{ user.phone }}" placeholder="+91 98765 43210">
                 </div>
 
+                <!-- Currency Preference Option (Default: Rupees INR) -->
+                <div class="form-group" style="background: #fff7ed; padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid #fed7aa;">
+                    <label class="form-label" for="preferred_currency" style="font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fa-solid fa-coins"></i> Preferred Display Currency
+                        <span class="badge badge-india" style="font-size: 0.72rem; margin-left: auto;">Default: Rupees (₹)</span>
+                    </label>
+                    <select id="preferred_currency" name="preferred_currency" class="form-control" style="font-weight: 600; border-color: #fdba74;">
+                        <option value="INR" {% if user.preferred_currency == 'INR' or not user.preferred_currency %}selected{% endif %}>🇮🇳 INR (₹) — Indian Rupee [Default]</option>
+                        <option value="USD" {% if user.preferred_currency == 'USD' %}selected{% endif %}>🇺🇸 USD ($) — United States Dollar</option>
+                        <option value="EUR" {% if user.preferred_currency == 'EUR' %}selected{% endif %}>🇪🇺 EUR (€) — Euro</option>
+                        <option value="GBP" {% if user.preferred_currency == 'GBP' %}selected{% endif %}>🇬🇧 GBP (£) — British Pound</option>
+                        <option value="JPY" {% if user.preferred_currency == 'JPY' %}selected{% endif %}>🇯🇵 JPY (¥) — Japanese Yen</option>
+                        <option value="AED" {% if user.preferred_currency == 'AED' %}selected{% endif %}>🇦🇪 AED (د.إ) — UAE Dirham</option>
+                        <option value="THB" {% if user.preferred_currency == 'THB' %}selected{% endif %}>🇹🇭 THB (฿) — Thai Baht</option>
+                        <option value="SGD" {% if user.preferred_currency == 'SGD' %}selected{% endif %}>🇸🇬 SGD (S$) — Singapore Dollar</option>
+                        <option value="AUD" {% if user.preferred_currency == 'AUD' %}selected{% endif %}>🇦🇺 AUD (A$) — Australian Dollar</option>
+                        <option value="CAD" {% if user.preferred_currency == 'CAD' %}selected{% endif %}>🇨🇦 CAD (C$) — Canadian Dollar</option>
+                        <option value="CHF" {% if user.preferred_currency == 'CHF' %}selected{% endif %}>🇨🇭 CHF (CHF) — Swiss Franc</option>
+                        <option value="IDR" {% if user.preferred_currency == 'IDR' %}selected{% endif %}>🇮🇩 IDR (Rp) — Indonesian Rupiah</option>
+                    </select>
+                    <span class="form-help" style="color: #9a3412; margin-top: 0.35rem;">Prices across your entire itinerary, budget breakdowns, and activity rates will automatically display in this currency.</span>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label" for="edit_bio">Bio / Travel Philosophy</label>
-                    <textarea id="edit_bio" name="bio" class="form-control" placeholder="Exploring heritage forts, serene backwaters, and international journeys..."></textarea>
+                    <textarea id="edit_bio" name="bio" class="form-control" placeholder="Exploring heritage forts, serene backwaters, and international journeys...">{{ user.bio }}</textarea>
                 </div>
 
                 <div class="form-group">

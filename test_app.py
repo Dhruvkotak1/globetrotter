@@ -239,6 +239,86 @@ class GlobeTrotterTestCase(unittest.TestCase):
             self.assertEqual(fb.rating, 5)
             self.assertTrue(fb.photo.startswith('feedback_live_'))
 
+    def test_calendar_view_json_serialization(self):
+        """Bugfix 1: Verify /trips/<id>/calendar renders with serialized stops without TypeError"""
+        self.client.post('/login', data={
+            'identifier': 'traveler@globetrotter.com',
+            'password': 'travel123'
+        })
+        with self.app.app_context():
+            trip = Trip.query.filter_by(share_slug='royal-rajasthan-jaipur-udaipur').first()
+            self.assertIsNotNone(trip)
+            trip_id = trip.id
+
+        res = self.client.get(f'/trips/{trip_id}/calendar')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Trip Visual Calendar', res.data)
+        self.assertIn(b'stopsData', res.data)
+
+    def test_add_custom_expense_form_and_api(self):
+        """Bugfix 2: Verify custom expenses can be added through form submission and API"""
+        self.client.post('/login', data={
+            'identifier': 'traveler@globetrotter.com',
+            'password': 'travel123'
+        })
+        with self.app.app_context():
+            trip = Trip.query.filter_by(share_slug='royal-rajasthan-jaipur-udaipur').first()
+            trip_id = trip.id
+
+        # Form submission
+        res = self.client.post(f'/api/trips/{trip_id}/expenses', data={
+            'title': 'Taj Mahal Entry Ticket & Audio Guide',
+            'category': 'Sightseeing',
+            'amount': '35.0',
+            'expense_date': '2026-09-01',
+            'notes': 'Booked online'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Taj Mahal Entry Ticket', res.data)
+
+        # JSON API submission
+        res = self.client.post(f'/api/trips/{trip_id}/expenses', json={
+            'title': 'Rajasthan Royal Palace Audio Tour',
+            'category': 'Activities',
+            'amount': 20.0
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.get_json()['success'])
+
+    def test_user_currency_preference_and_global_formatting(self):
+        """Feature: Currency preference in profile (Default INR, switch to USD/EUR)"""
+        # Default currency for visitors and Indian users should show ₹
+        res = self.client.get('/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'\xe2\x82\xb9', res.data) # UTF-8 bytes for ₹
+
+        # Log in
+        self.client.post('/login', data={
+            'identifier': 'traveler@globetrotter.com',
+            'password': 'travel123'
+        })
+
+        # Update currency preference via profile modal to USD
+        res = self.client.post('/profile', data={
+            'first_name': 'Aarav',
+            'last_name': 'Sharma',
+            'email': 'traveler@globetrotter.com',
+            'preferred_currency': 'USD'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Preferred Currency:', res.data)
+
+        with self.app.app_context():
+            user = User.query.filter_by(username='aarav_travels').first()
+            self.assertEqual(user.preferred_currency, 'USD')
+
+        # Switch back to INR via quick switcher
+        res = self.client.post('/set-currency', data={'currency': 'INR'}, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        with self.app.app_context():
+            user = User.query.filter_by(username='aarav_travels').first()
+            self.assertEqual(user.preferred_currency, 'INR')
+
 
 if __name__ == '__main__':
     unittest.main()

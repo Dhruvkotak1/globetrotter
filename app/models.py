@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     country = db.Column(db.String(64), default='')
     bio = db.Column(db.Text, default='')
     avatar = db.Column(db.String(256), default='default_avatar.png')
+    preferred_currency = db.Column(db.String(10), default='INR')
     is_admin = db.Column(db.Boolean, default=False)
     reset_token = db.Column(db.String(100), nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)

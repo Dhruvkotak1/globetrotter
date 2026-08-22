@@ -49,14 +49,24 @@ def create_app(config_class=Config):
             featured_feedbacks=featured_feedbacks
         )
 
+    # Context processor to make active currency available in all templates
+    @app.context_processor
+    def inject_currency_context():
+        from app.utils import get_user_preferred_currency, INR_EXCHANGE_RATES
+        code = get_user_preferred_currency()
+        info = INR_EXCHANGE_RATES.get(code, INR_EXCHANGE_RATES['INR'])
+        return {
+            'user_currency_code': code,
+            'user_currency_symbol': info.get('symbol', '₹'),
+            'user_currency_info': info,
+            'all_currencies': INR_EXCHANGE_RATES
+        }
+
     # Custom template filters
     @app.template_filter('currency')
     def format_currency(value):
-        try:
-            val = float(value or 0.0)
-            return f"${val:,.2f}"
-        except (ValueError, TypeError):
-            return "$0.00"
+        from app.utils import format_user_currency
+        return format_user_currency(value)
 
     @app.template_filter('date_format')
     def format_date(value, format='%b %d, %Y'):
