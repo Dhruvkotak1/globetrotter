@@ -215,6 +215,7 @@ def profile():
         user=current_user,
         preplanned_trips=preplanned_trips,
         previous_trips=previous_trips,
+        saved_destinations=saved_dests,
         saved_dests=saved_dests
     )
 

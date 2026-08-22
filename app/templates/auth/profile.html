@@ -3,95 +3,136 @@
 {% block title %}{{ user.full_name }} — Profile & Settings{% endblock %}
 
 {% block content %}
-<!-- Screen 12: User Profile / Settings Screen (Wireframe Screen 7) -->
-<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
-    <!-- Profile Header Card -->
-    <div class="card" style="margin-bottom: 2.5rem; overflow: visible;">
-        <div style="height: 140px; background: var(--primary-gradient); border-radius: var(--radius-lg) var(--radius-lg) 0 0; position: relative;"></div>
+<!-- Screen 12: User Profile & Account Settings Screen -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem; max-width: 1140px;">
+    
+    <!-- Profile Header Hero Card -->
+    <div class="card" style="margin-bottom: 2rem; overflow: hidden; border: 1px solid var(--border-light); box-shadow: var(--shadow-md); border-radius: var(--radius-lg);">
+        <!-- Banner with Indian Architectural / Travel Pattern Accent -->
+        <div style="height: 160px; background: linear-gradient(135deg, #0f766e 0%, #1e293b 60%, #f97316 100%); position: relative;">
+            <div style="position: absolute; top: 1rem; right: 1.5rem; display: flex; gap: 0.5rem;">
+                <span class="badge" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                    <i class="fa-solid fa-earth-asia"></i> Explorer Level &bull; Global Traveler
+                </span>
+                {% if user.is_admin %}
+                    <span class="badge" style="background: #f97316; color: #ffffff; font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                        <i class="fa-solid fa-crown"></i> Admin
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Profile Info Container -->
         <div style="padding: 0 2rem 2rem; position: relative;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; margin-top: -50px; margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: flex-end; gap: 1.5rem;">
-                    <div style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; margin-top: -60px; margin-bottom: 1.5rem;">
+                
+                <!-- Left: Avatar + Names + Metadata -->
+                <div style="display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap;">
+                    <div style="position: relative; flex-shrink: 0;">
                         {% if user.avatar and user.avatar != 'default_avatar.png' %}
-                            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-md);">
+                            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="{{ user.username }}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-lg); background: #ffffff;">
                         {% else %}
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-md);">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=220&q=80" alt="{{ user.username }}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-lg); background: #ffffff;">
                         {% endif %}
+                        <button onclick="openModal('editProfileModal')" style="position: absolute; bottom: 4px; right: 4px; width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #ffffff; border: 2px solid #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);" title="Change Photo">
+                            <i class="fa-solid fa-camera" style="font-size: 0.75rem;"></i>
+                        </button>
                     </div>
+
                     <div>
-                        <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">{{ user.full_name }}</h1>
-                      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
-                        <i class="fa-solid fa-location-dot" style="color: var(--accent-saffron);"></i> {{ user.city or 'New Delhi' }}, {{ user.country or 'India' }} &bull; 
-                        <i class="fa-regular fa-envelope"></i> {{ user.email }}
-                    </p>
-                    
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                        <span class="badge badge-india" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
-                            <i class="fa-solid fa-coins"></i> Preferred Currency: <strong>{{ user.preferred_currency or 'INR' }} ({{ user_currency_symbol }})</strong>
-                        </span>
-                        <span class="badge badge-category" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
-                            <i class="fa-regular fa-calendar-check"></i> Member since {{ user.created_at|date_format('%B %Y') }}
-                        </span>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <h1 style="font-size: 1.9rem; font-weight: 800; margin: 0; color: var(--text-primary); letter-spacing: -0.02em;">{{ user.full_name }}</h1>
+                            <span style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">@{{ user.username }}</span>
+                        </div>
+
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0.35rem 0 0.75rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <span><i class="fa-solid fa-location-dot" style="color: var(--accent-saffron);"></i> {{ user.city or 'New Delhi' }}{% if user.country %}, {{ user.country }}{% else %}, India{% endif %}</span>
+                            <span>&bull;</span>
+                            <span><i class="fa-regular fa-envelope" style="color: var(--primary);"></i> {{ user.email }}</span>
+                            {% if user.phone %}
+                                <span>&bull;</span>
+                                <span><i class="fa-solid fa-phone" style="color: var(--accent-emerald); font-size: 0.85rem;"></i> {{ user.phone }}</span>
+                            {% endif %}
+                        </p>
+                        
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <span class="badge badge-india" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; font-weight: 700;">
+                                <i class="fa-solid fa-coins"></i> Preferred Currency: {{ user.preferred_currency or 'INR' }} ({{ user_currency_symbol }})
+                            </span>
+                            <span class="badge badge-category" style="font-size: 0.82rem; padding: 0.35rem 0.85rem;">
+                                <i class="fa-regular fa-calendar-check"></i> Member since {{ user.created_at|date_format('%B %Y') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 0.75rem; align-self: flex-start; flex-wrap: wrap;">
+                <!-- Right: Header Action Buttons -->
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                     <button class="btn btn-primary btn-sm" onclick="openModal('editProfileModal')">
                         <i class="fa-solid fa-user-pen"></i> Edit Profile
                     </button>
+                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-secondary btn-sm">
+                        <i class="fa-solid fa-plus"></i> Plan Trip
+                    </a>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" style="color: #dc2626; border-color: #fecaca; background: #fff5f5;" title="Sign out of your account">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
                     </a>
                 </div>
             </div>
 
-            <!-- 1-Click Preferred Currency Switcher Box -->
-            <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%); padding: 1rem 1.5rem; border-radius: var(--radius-md); border: 1px solid #fed7aa; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <!-- 1-Click Currency Preference Bar -->
+            <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%); padding: 1.15rem 1.5rem; border-radius: var(--radius-md); border: 1px solid #fed7aa; margin: 1.5rem 0 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <div style="font-size: 0.95rem; font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 0.4rem;">
-                        <i class="fa-solid fa-coins"></i> Active Currency Preference
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 0.45rem;">
+                        <i class="fa-solid fa-coins"></i> Preferred Display Currency
+                        <span class="badge badge-india" style="font-size: 0.72rem;">Active: {{ user.preferred_currency or 'INR' }}</span>
                     </div>
                     <p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0.2rem 0 0;">
-                        Choose how prices across all trips, budgets, and activities are displayed.
+                        All trip budgets, activity prices, and hotel costs across GlobeTrotter automatically format with this currency.
                     </p>
                 </div>
 
                 <form action="{{ url_for('auth.set_currency') }}" method="POST" style="display: flex; gap: 0.5rem; align-items: center; margin: 0;">
                     <input type="hidden" name="next" value="{{ url_for('auth.profile') }}">
-                    <button type="submit" name="currency" value="INR" class="btn btn-sm {% if (user.preferred_currency or 'INR') == 'INR' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.35rem 0.9rem; font-weight: 700;">
+                    <button type="submit" name="currency" value="INR" class="btn btn-sm {% if (user.preferred_currency or 'INR') == 'INR' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.4rem 1rem; font-weight: 700; font-size: 0.85rem;" title="Default Indian Rupee">
                         🇮🇳 INR (₹)
                     </button>
-                    <button type="submit" name="currency" value="USD" class="btn btn-sm {% if user.preferred_currency == 'USD' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.35rem 0.9rem; font-weight: 700;">
+                    <button type="submit" name="currency" value="USD" class="btn btn-sm {% if user.preferred_currency == 'USD' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.4rem 1rem; font-weight: 700; font-size: 0.85rem;" title="US Dollar">
                         🇺🇸 USD ($)
                     </button>
-                    <button type="submit" name="currency" value="EUR" class="btn btn-sm {% if user.preferred_currency == 'EUR' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.35rem 0.9rem; font-weight: 700;">
+                    <button type="submit" name="currency" value="EUR" class="btn btn-sm {% if user.preferred_currency == 'EUR' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: var(--radius-full); padding: 0.4rem 1rem; font-weight: 700; font-size: 0.85rem;" title="Euro">
                         🇪🇺 EUR (€)
                     </button>
                 </form>
             </div>
 
+            <!-- Bio & Travel Philosophy Quote -->
             {% if user.bio %}
-                <div style="background: #f8fafc; padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 1.5rem;">
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">{{ user.bio }}</p>
+                <div style="background: #f8fafc; padding: 1.15rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 1.5rem; position: relative;">
+                    <i class="fa-solid fa-quote-left" style="color: #cbd5e1; font-size: 1.4rem; position: absolute; top: 12px; left: 14px;"></i>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin: 0; padding-left: 2rem; font-style: italic;">
+                        "{{ user.bio }}"
+                    </p>
                 </div>
             {% endif %}
 
-            <div style="display: flex; gap: 2rem; border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
-                <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">{{ user.trips.count() }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Total Trips</div>
+            <!-- Stat Counters Row -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+                <div style="background: #f8fafc; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">{{ user.trips.count() }}</div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Total Trips</div>
                 </div>
-                <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-emerald);">{{ preplanned_trips|length }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Preplanned Trips</div>
+                <div style="background: #ecfdf5; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid #a7f3d0; text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: #059669;">{{ preplanned_trips|length }}</div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: #065f46; text-transform: uppercase; letter-spacing: 0.04em;">Preplanned Trips</div>
                 </div>
-                <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan);">{{ previous_trips|length }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Past Journeys</div>
+                <div style="background: #f0fdfa; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid #99f6e4; text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: #0d9488;">{{ previous_trips|length }}</div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: #115e59; text-transform: uppercase; letter-spacing: 0.04em;">Past Journeys</div>
                 </div>
-                <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-rose);">{{ saved_destinations|length }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Saved Places</div>
+                <div style="background: #fff1f2; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid #fecdd3; text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: #e11d48;">{{ (saved_destinations or saved_dests)|length }}</div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: #9f1239; text-transform: uppercase; letter-spacing: 0.04em;">Saved Places</div>
                 </div>
             </div>
         </div>
@@ -99,113 +140,126 @@
 
     <!-- Section 1: Preplanned Trips (Ongoing / Upcoming) -->
     <div style="margin-bottom: 3rem;">
-        <div class="section-header">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
             <div>
-                <h2 class="section-title">Preplanned Trips</h2>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">Upcoming and currently ongoing adventures</p>
+                <h2 class="section-title" style="font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <i class="fa-solid fa-map-location-dot" style="color: var(--primary);"></i> Preplanned Trips
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0.2rem 0 0;">Upcoming and currently ongoing adventures</p>
             </div>
+            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus"></i> Plan New Trip
+            </a>
         </div>
 
         {% if preplanned_trips %}
             <div class="grid-3">
                 {% for trip in preplanned_trips %}
-                <div class="card card-lift trip-card">
-                    <div class="trip-card-cover">
-                        <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
-                        <div class="trip-card-badges">
-                            <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
-                            <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                <div class="card card-lift trip-card" style="border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="trip-card-cover" style="height: 180px; position: relative; overflow: hidden; background: #1e293b;">
+                        <img src="{{ trip.cover_image or 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=700&q=80' }}" alt="{{ trip.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="trip-card-badges" style="position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="badge badge-{{ trip.status }}">{{ trip.status|title }}</span>
+                            <span class="badge badge-cost" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #ffffff; font-weight: 700;">{{ trip.total_cost|currency }}</span>
                         </div>
                     </div>
-                    <div class="trip-card-body">
-                        <div class="trip-card-meta">
+                    <div class="trip-card-body" style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1;">
+                        <div class="trip-card-meta" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
                             <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
                         </div>
-                        <h3 class="trip-card-title">{{ trip.title }}</h3>
-                        <p class="trip-card-desc">{{ trip.description or 'Preplanned custom itinerary.' }}</p>
-                        <div class="trip-card-stats">
-                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">View Timeline</a>
-                            <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                        <h3 class="trip-card-title" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem;">{{ trip.title }}</h3>
+                        <p class="trip-card-desc" style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem; flex: 1;">{{ trip.description or 'Preplanned custom itinerary.' }}</p>
+                        <div class="trip-card-stats" style="display: flex; gap: 0.5rem; margin-top: auto;">
+                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">Timeline</a>
+                            <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">Edit Plan</a>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
-                <i class="fa-solid fa-map-location-dot" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--primary);"></i>
-                <p>No preplanned trips yet.</p>
-                <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Plan a New Trip</a>
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted); border-radius: var(--radius-md);">
+                <i class="fa-solid fa-plane-departure" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--primary);"></i>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-primary);">No preplanned trips yet</h4>
+                <p style="font-size: 0.9rem; margin-bottom: 1rem;">Design your next journey with day-by-day stops and activities.</p>
+                <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm">Plan a Trip</a>
             </div>
         {% endif %}
     </div>
 
     <!-- Section 2: Previous Trips (Completed) -->
     <div style="margin-bottom: 3rem;">
-        <div class="section-header">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
             <div>
-                <h2 class="section-title">Previous Trips</h2>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">Memories from your completed journeys</p>
+                <h2 class="section-title" style="font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-emerald);"></i> Previous Trips
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0.2rem 0 0;">Memories from your completed journeys</p>
             </div>
         </div>
 
         {% if previous_trips %}
             <div class="grid-3">
                 {% for trip in previous_trips %}
-                <div class="card card-lift trip-card">
-                    <div class="trip-card-cover">
-                        <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
-                        <div class="trip-card-badges">
+                <div class="card card-lift trip-card" style="border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="trip-card-cover" style="height: 180px; position: relative; overflow: hidden; background: #1e293b;">
+                        <img src="{{ trip.cover_image or 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=700&q=80' }}" alt="{{ trip.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="trip-card-badges" style="position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center;">
                             <span class="badge badge-completed">Completed</span>
-                            <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                            <span class="badge badge-cost" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #ffffff; font-weight: 700;">{{ trip.total_cost|currency }}</span>
                         </div>
                     </div>
-                    <div class="trip-card-body">
-                        <div class="trip-card-meta">
+                    <div class="trip-card-body" style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1;">
+                        <div class="trip-card-meta" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
                             <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
                         </div>
-                        <h3 class="trip-card-title">{{ trip.title }}</h3>
-                        <p class="trip-card-desc">{{ trip.description }}</p>
-                        <div class="trip-card-stats">
-                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">View Timeline</a>
-                            <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-outline btn-sm">Budget</a>
+                        <h3 class="trip-card-title" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem;">{{ trip.title }}</h3>
+                        <p class="trip-card-desc" style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem; flex: 1;">{{ trip.description }}</p>
+                        <div class="trip-card-stats" style="display: flex; gap: 0.5rem; margin-top: auto;">
+                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">View Timeline</a>
+                            <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-outline btn-sm" style="flex: 1; text-align: center;">Budget</a>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted); border-radius: var(--radius-md);">
                 <i class="fa-solid fa-passport" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--text-muted);"></i>
-                <p>No completed past trips recorded.</p>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-primary);">No completed trips yet</h4>
+                <p style="font-size: 0.9rem;">Once you finish a trip, it will be archived here as a lasting travel memory.</p>
             </div>
         {% endif %}
     </div>
 
     <!-- Section 3: Saved Destinations Wishlist -->
     <div style="margin-bottom: 3rem;">
-        <div class="section-header">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
             <div>
-                <h2 class="section-title">Saved Destinations</h2>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">Places on your travel radar</p>
+                <h2 class="section-title" style="font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <i class="fa-solid fa-heart" style="color: var(--accent-rose);"></i> Saved Destinations Wishlist
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0.2rem 0 0;">Heritage cities and dream places on your radar</p>
             </div>
-            <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">Discover More</a>
+            <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-compass"></i> Discover Cities
+            </a>
         </div>
 
-        {% if saved_destinations %}
+        {% if saved_destinations or saved_dests %}
             <div class="grid-4">
-                {% for city in saved_destinations %}
-                <div class="card card-lift">
+                {% for city in (saved_destinations or saved_dests) %}
+                <div class="card card-lift" style="border-radius: var(--radius-md); overflow: hidden;">
                     <div style="height: 140px; overflow: hidden; position: relative;">
                         <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span class="badge badge-category" style="position: absolute; top: 10px; left: 10px;">{{ city.region }}</span>
+                        <span class="badge badge-category" style="position: absolute; top: 10px; left: 10px; font-size: 0.75rem;">{{ city.region or city.country }}</span>
                     </div>
                     <div style="padding: 1rem;">
-                        <h4 style="font-size: 1.05rem; margin-bottom: 0.2rem;">{{ city.name }}</h4>
-                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.75rem;">{{ city.country }}</p>
-                        <a href="{{ url_for('itinerary.activity_search', city_id=city.id) }}" class="btn btn-outline btn-sm" style="width: 100%;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem;">{{ city.name }}</h4>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-location-dot"></i> {{ city.country }}</p>
+                        <a href="{{ url_for('itinerary.activity_search', city_id=city.id) }}" class="btn btn-outline btn-sm" style="width: 100%; text-align: center;">
                             View Activities
                         </a>
                     </div>
@@ -213,9 +267,11 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
-                <i class="fa-regular fa-bookmark" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                <p>You haven't saved any cities to your wishlist yet.</p>
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted); border-radius: var(--radius-md);">
+                <i class="fa-regular fa-bookmark" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--primary);"></i>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-primary);">Your wishlist is empty</h4>
+                <p style="font-size: 0.9rem; margin-bottom: 1rem;">Browse world destinations and bookmark places you want to visit.</p>
+                <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">Explore Cities</a>
             </div>
         {% endif %}
     </div>
@@ -223,10 +279,12 @@
     <!-- Account Actions & Logout Bar -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; box-shadow: var(--shadow-sm);">
         <div>
-            <h4 style="margin: 0 0 0.2rem; font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
-                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Account & Session
+            <h4 style="margin: 0 0 0.2rem; font-size: 1.05rem; display: flex; align-items: center; gap: 0.45rem; color: var(--text-primary);">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Account & Session Management
             </h4>
-            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Logged in as <strong>{{ user.username }}</strong> ({{ user.email }})</p>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                Logged in as <strong>{{ user.username }}</strong> &bull; {{ user.email }}
+            </p>
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button class="btn btn-secondary btn-sm" onclick="openModal('editProfileModal')">
@@ -241,13 +299,17 @@
 
 <!-- Modal: Edit Profile & Settings -->
 <div id="editProfileModal" class="modal">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: 620px;">
         <div class="modal-header">
-            <h3 style="font-size: 1.25rem;">Edit Profile & Account Settings</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-user-gear" style="color: var(--primary);"></i> Edit Profile & Account Settings
+            </h3>
             <button class="alert-close" onclick="closeModal('editProfileModal')">&times;</button>
         </div>
         <form action="{{ url_for('auth.profile') }}" method="POST" enctype="multipart/form-data">
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 1.5rem;">
+                
+                <!-- Section 1: Names -->
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="edit_first_name">First Name</label>
@@ -259,6 +321,7 @@
                     </div>
                 </div>
 
+                <!-- Section 2: Contact & Location -->
                 <div class="form-group">
                     <label class="form-label" for="edit_email">Email Address</label>
                     <input type="email" id="edit_email" name="email" class="form-control" value="{{ user.email }}" placeholder="aarav.sharma@example.com" required>
@@ -280,9 +343,9 @@
                     <input type="text" id="edit_phone" name="phone" class="form-control" value="{{ user.phone }}" placeholder="+91 98765 43210">
                 </div>
 
-                <!-- Currency Preference Option (3 Main Supported Currencies) -->
-                <div class="form-group" style="background: #fff7ed; padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid #fed7aa;">
-                    <label class="form-label" for="preferred_currency" style="font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 0.4rem;">
+                <!-- Section 3: Currency Preference (3 Core Main Currencies) -->
+                <div class="form-group" style="background: #fff7ed; padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid #fed7aa; margin: 1.25rem 0;">
+                    <label class="form-label" for="preferred_currency" style="font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
                         <i class="fa-solid fa-coins"></i> Preferred Display Currency
                         <span class="badge badge-india" style="font-size: 0.72rem; margin-left: auto;">Default: Rupees (₹)</span>
                     </label>
@@ -291,18 +354,22 @@
                         <option value="USD" {% if user.preferred_currency == 'USD' %}selected{% endif %}>🇺🇸 USD ($) — US Dollar</option>
                         <option value="EUR" {% if user.preferred_currency == 'EUR' %}selected{% endif %}>🇪🇺 EUR (€) — Euro</option>
                     </select>
-                    <span class="form-help" style="color: #9a3412; margin-top: 0.35rem;">Prices across your itineraries, budgets, and activities will automatically display in this currency.</span>
+                    <span class="form-help" style="color: #9a3412; margin-top: 0.35rem; font-size: 0.8rem;">
+                        All trip costs and price estimates across the website will display in this selected currency.
+                    </span>
                 </div>
 
+                <!-- Section 4: Bio -->
                 <div class="form-group">
                     <label class="form-label" for="edit_bio">Bio / Travel Philosophy</label>
-                    <textarea id="edit_bio" name="bio" class="form-control" placeholder="Exploring heritage forts, serene backwaters, and international journeys...">{{ user.bio }}</textarea>
+                    <textarea id="edit_bio" name="bio" class="form-control" rows="3" placeholder="Exploring heritage forts, serene backwaters, and international journeys...">{{ user.bio }}</textarea>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="fa-solid fa-camera"></i> Change Profile Picture</span>
-                        <span class="badge badge-ongoing" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt"></i> Real-Time</span>
+                <!-- Section 5: Real-time Camera / Photo Upload -->
+                <div class="form-group" style="border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
+                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span style="font-weight: 700;"><i class="fa-solid fa-camera"></i> Change Profile Picture</span>
+                        <span class="badge badge-ongoing" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt"></i> Real-Time Snapshot</span>
                     </label>
 
                     <div class="camera-component" data-camera-component id="profile-camera">
@@ -351,24 +418,27 @@
                     </div>
                 </div>
 
+                <!-- Section 6: Password Update -->
                 <div class="form-group" style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
-                    <label class="form-label" for="edit_password">Change Password (Leave blank to keep current)</label>
-                    <input type="password" id="edit_password" name="new_password" class="form-control" placeholder="New password">
+                    <label class="form-label" for="edit_password">New Password (Optional)</label>
+                    <input type="password" id="edit_password" name="new_password" class="form-control" placeholder="Leave blank to keep your current password">
                 </div>
 
-                <!-- Danger Zone: Delete Account -->
+                <!-- Section 7: Danger Zone -->
                 <div style="border-top: 1px solid #fee2e2; margin-top: 1.5rem; padding-top: 1rem;">
-                    <h4 style="color: var(--accent-rose); font-size: 0.95rem; margin-bottom: 0.5rem;">Delete Account</h4>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Type "DELETE" below to permanently delete your account and all itineraries.</p>
+                    <h4 style="color: var(--accent-rose); font-size: 0.95rem; margin-bottom: 0.35rem; font-weight: 700;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                    </h4>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Type "DELETE" below to permanently delete your account and all created itineraries.</p>
                     <div style="display: flex; gap: 0.5rem;">
                         <input type="text" name="confirm_delete" class="form-control" placeholder='Type "DELETE"' style="border-color: #fecdd3;">
-                        <button type="submit" formaction="{{ url_for('auth.delete_account') }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you completely sure?')">
-                            Delete
+                        <button type="submit" formaction="{{ url_for('auth.delete_account') }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you completely sure you want to delete your account?')">
+                            Delete Account
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
