@@ -199,6 +199,95 @@
             </table>
         </div>
     </div>
+
+    <!-- Feedback & Star Ratings Moderation Section -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div>
+                <h3 style="font-size: 1.3rem;"><i class="fa-solid fa-star" style="color: #f59e0b;"></i> Feedback & Ratings Moderation</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Review submitted community feedback, ratings, and attached live photos</p>
+            </div>
+            <span class="badge" style="background: #fef3c7; color: #b45309;">{{ feedbacks|length }} Reviews</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-light); text-align: left; color: var(--text-muted);">
+                        <th style="padding: 0.75rem 1rem;">Traveler</th>
+                        <th style="padding: 0.75rem 1rem;">Rating</th>
+                        <th style="padding: 0.75rem 1rem;">Category / Destination</th>
+                        <th style="padding: 0.75rem 1rem;">Title & Comment</th>
+                        <th style="padding: 0.75rem 1rem;">Photo</th>
+                        <th style="padding: 0.75rem 1rem;">Featured</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in feedbacks %}
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 0.85rem 1rem; font-weight: 700;">
+                            {{ fb.display_author }}
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">{{ fb.email }}</div>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; color: #f59e0b; font-weight: 700;">
+                            {% for i in range(fb.rating) %}★{% endfor %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">({{ fb.rating }}/5)</span>
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            <span class="badge badge-category">{{ fb.category }}</span>
+                            {% if fb.destination_name %}
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                    <i class="fa-solid fa-location-dot"></i> {{ fb.destination_name }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; max-width: 280px;">
+                            <strong>{{ fb.title }}</strong>
+                            <div style="font-size: 0.82rem; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ fb.message }}
+                            </div>
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            {% if fb.photo %}
+                                <img src="{{ url_for('static', filename='uploads/' + fb.photo) }}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Click to view full photo">
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 0.8rem;">No Photo</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            {% if fb.is_featured %}
+                                <span class="badge badge-ongoing"><i class="fa-solid fa-check"></i> Featured</span>
+                            {% else %}
+                                <span class="badge" style="background: #f1f5f9; color: var(--text-muted);">Standard</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: right;">
+                            <div style="display: inline-flex; gap: 0.4rem;">
+                                <form action="{{ url_for('admin.toggle_feedback_featured', feedback_id=fb.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.5rem;" title="Toggle Featured on Homepage">
+                                        <i class="fa-solid fa-award"></i>
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin.delete_feedback', feedback_id=fb.id) }}" method="POST" onsubmit="return confirm('Delete this feedback?');">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3; padding: 0.25rem 0.5rem;" title="Delete Feedback">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                            No traveler feedbacks submitted yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

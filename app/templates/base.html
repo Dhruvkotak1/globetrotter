@@ -34,6 +34,8 @@
                 <li><a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-compass"></i> Explore</a></li>
                 <li><a href="{{ url_for('itinerary.city_search') }}" class="nav-link"><i class="fa-solid fa-city"></i> Cities</a></li>
                 <li><a href="{{ url_for('itinerary.activity_search') }}" class="nav-link"><i class="fa-solid fa-person-hiking"></i> Activities</a></li>
+                <li><a href="{{ url_for('currency.converter') }}" class="nav-link"><i class="fa-solid fa-money-bill-transfer"></i> Currency</a></li>
+                <li><a href="{{ url_for('feedback.index') }}" class="nav-link"><i class="fa-solid fa-star"></i> Reviews</a></li>
                 <li><a href="{{ url_for('community.index') }}" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
                 {% if current_user.is_authenticated %}
                     <li><a href="{{ url_for('trips.my_trips') }}" class="nav-link"><i class="fa-solid fa-suitcase-rolling"></i> My Trips</a></li>
@@ -97,9 +99,11 @@
                 <p style="color: var(--text-muted); font-size: 0.85rem;">Empowering personalized multi-city travel planning, budgets, and community discovery.</p>
             </div>
             
-            <div style="display: flex; gap: 2rem; font-size: 0.9rem;">
+            <div style="display: flex; gap: 1.5rem; font-size: 0.9rem; flex-wrap: wrap;">
                 <a href="{{ url_for('itinerary.city_search') }}">Explore Cities</a>
                 <a href="{{ url_for('itinerary.activity_search') }}">Find Activities</a>
+                <a href="{{ url_for('currency.converter') }}">Abroad Currency Converter</a>
+                <a href="{{ url_for('feedback.index') }}">Traveler Reviews & Ratings</a>
                 <a href="{{ url_for('community.index') }}">Community Trips</a>
                 <a href="{{ url_for('auth.login') }}">Account</a>
             </div>
@@ -112,6 +116,7 @@
 
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/camera-capture.js') }}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

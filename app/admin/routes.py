@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import current_user, login_required
 from sqlalchemy import func
 from app.extensions import db
-from app.models import User, Trip, TripStop, Activity, City, CustomExpense
+from app.models import User, Trip, TripStop, Activity, City, CustomExpense, Feedback
 from app.admin import admin_bp
 
 def admin_required(f):
@@ -52,6 +52,9 @@ def dashboard():
     
     # Recent trips for moderation
     recent_trips = Trip.query.order_by(Trip.created_at.desc()).limit(10).all()
+
+    # Feedbacks & ratings for moderation
+    feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
     
     # City stop names and counts for chart
     city_chart_labels = [f"{c[0]}, {c[1]}" for c in top_cities_query] if top_cities_query else ['Tokyo', 'Paris', 'New York', 'Rome', 'Bali']
@@ -67,6 +70,7 @@ def dashboard():
         top_cities=top_cities_query,
         users=users,
         recent_trips=recent_trips,
+        feedbacks=feedbacks,
         trend_labels=trend_labels,
         trend_data=trend_data,
         city_chart_labels=city_chart_labels,
@@ -111,4 +115,25 @@ def delete_trip(trip_id):
     db.session.delete(trip)
     db.session.commit()
     flash(f'Trip "{title}" deleted by administrator.', 'info')
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/feedback/<int:feedback_id>/toggle-featured', methods=['POST'])
+@admin_required
+def toggle_feedback_featured(feedback_id):
+    fb = Feedback.query.get_or_404(feedback_id)
+    fb.is_featured = not fb.is_featured
+    db.session.commit()
+    flash(f'Feedback "{fb.title}" is now {"Featured on Homepage" if fb.is_featured else "Unfeatured"}.', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/feedback/<int:feedback_id>/delete', methods=['POST'])
+@admin_required
+def delete_feedback(feedback_id):
+    fb = Feedback.query.get_or_404(feedback_id)
+    title = fb.title
+    db.session.delete(fb)
+    db.session.commit()
+    flash(f'Feedback "{title}" deleted successfully.', 'info')
     return redirect(url_for('admin.dashboard'))

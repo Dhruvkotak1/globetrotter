@@ -23,3 +23,8 @@ instance/
 Thumbs.db
 .vscode/
 .idea/
+
+# Uploads
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+

@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+
+{% block title %}Traveler Reviews & Feedback — GlobeTrotter{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Header Section -->
+    <div style="text-align: center; max-width: 750px; margin: 0 auto 3rem;">
+        <span class="badge badge-public" style="margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-star"></i> Traveler Community Voices
+        </span>
+        <h1 style="font-size: 2.4rem; margin-bottom: 0.5rem;">Traveler Feedback & Ratings</h1>
+        <p style="color: var(--text-secondary); font-size: 1.05rem;">
+            Discover honest experiences from globetrotters worldwide, rate your travel planning journey, and capture real-time moments.
+        </p>
+    </div>
+
+    <!-- Top Section: Rating Analytics + Feedback Submission Form Grid -->
+    <div class="grid-2" style="gap: 2.5rem; margin-bottom: 4rem; align-items: start;">
+        
+        <!-- Left Column: Rating Analytics & Filters -->
+        <div>
+            <!-- Overall Score Card -->
+            <div class="card" style="padding: 2rem; margin-bottom: 1.5rem; text-align: center; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+                <div style="font-size: 3.5rem; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 0.5rem;">
+                    {{ avg_rating }}
+                </div>
+                <div style="color: #f59e0b; font-size: 1.4rem; margin-bottom: 0.5rem;">
+                    {% for i in range(1, 6) %}
+                        {% if i <= avg_rating|round(0, 'floor')|int %}
+                            <i class="fa-solid fa-star"></i>
+                        {% elif i - avg_rating < 0.8 %}
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                        {% else %}
+                            <i class="fa-regular fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 600;">
+                    Based on <strong>{{ total_count }}</strong> verified traveler reviews
+                </p>
+
+                <!-- Rating Distribution Bars -->
+                <div style="margin-top: 1.5rem; text-align: left;">
+                    {% for star in [5, 4, 3, 2, 1] %}
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                        <span style="width: 50px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
+                            {{ star }} <i class="fa-solid fa-star star-gold" style="font-size: 0.75rem;"></i>
+                        </span>
+                        <div style="flex: 1; height: 8px; background: var(--border-light); border-radius: var(--radius-full); overflow: hidden;">
+                            <div style="height: 100%; width: {{ rating_percentages[star] }}%; background: #f59e0b; border-radius: var(--radius-full);"></div>
+                        </div>
+                        <span style="width: 40px; text-align: right; color: var(--text-muted); font-size: 0.8rem;">
+                            {{ rating_counts[star] }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Filter Pills Card -->
+            <div class="card" style="padding: 1.5rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">
+                    <i class="fa-solid fa-filter"></i> Filter Reviews
+                </h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <a href="{{ url_for('feedback.index') }}" class="preset-chip {% if not selected_rating and not selected_category %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        All Reviews ({{ total_count }})
+                    </a>
+                    <a href="{{ url_for('feedback.index', rating=5) }}" class="preset-chip {% if selected_rating == '5' %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        5 Stars ★ ({{ rating_counts[5] }})
+                    </a>
+                    <a href="{{ url_for('feedback.index', rating=4) }}" class="preset-chip {% if selected_rating == '4' %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        4 Stars ★ ({{ rating_counts[4] }})
+                    </a>
+                    <a href="{{ url_for('feedback.index', category='Trip Experience') }}" class="preset-chip {% if selected_category == 'Trip Experience' %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        Trip Experience
+                    </a>
+                    <a href="{{ url_for('feedback.index', category='Destination Review') }}" class="preset-chip {% if selected_category == 'Destination Review' %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        Destination Reviews
+                    </a>
+                    <a href="{{ url_for('feedback.index', category='Budget Planner') }}" class="preset-chip {% if selected_category == 'Budget Planner' %}active" style="background: var(--primary); color: #ffffff;{% endif %}">
+                        Budget Planner
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Submission Form with Star Rating & Live Camera Capture -->
+        <div class="card" style="padding: 2rem; box-shadow: var(--shadow-lg);">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    <i class="fa-solid fa-pen-nib"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.3rem; margin: 0;">Submit Your Review & Rating</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Share travel insights or platform feedback</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('feedback.index') }}" method="POST" enctype="multipart/form-data">
+                
+                <!-- Interactive Star Rating Selector -->
+                <div class="form-group" style="text-align: center; background: #fffbeb; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #fde68a; margin-bottom: 1.5rem;">
+                    <label class="form-label" style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: #92400e;">
+                        Select Your Overall Rating *
+                    </label>
+                    <div class="star-rating-widget" id="starRatingWidget">
+                        <input type="radio" id="star5" name="rating" value="5" checked onclick="updateRatingLabel(5)">
+                        <label for="star5" title="5 Stars - Excellent"><i class="fa-solid fa-star"></i></label>
+                        
+                        <input type="radio" id="star4" name="rating" value="4" onclick="updateRatingLabel(4)">
+                        <label for="star4" title="4 Stars - Very Good"><i class="fa-solid fa-star"></i></label>
+                        
+                        <input type="radio" id="star3" name="rating" value="3" onclick="updateRatingLabel(3)">
+                        <label for="star3" title="3 Stars - Good"><i class="fa-solid fa-star"></i></label>
+                        
+                        <input type="radio" id="star2" name="rating" value="2" onclick="updateRatingLabel(2)">
+                        <label for="star2" title="2 Stars - Fair"><i class="fa-solid fa-star"></i></label>
+                        
+                        <input type="radio" id="star1" name="rating" value="1" onclick="updateRatingLabel(1)">
+                        <label for="star1" title="1 Star - Poor"><i class="fa-solid fa-star"></i></label>
+                    </div>
+                    <div id="ratingDescription" style="font-size: 0.9rem; font-weight: 700; color: #b45309; margin-top: 0.35rem;">
+                        ★★★★★ 5 Stars — Excellent Experience!
+                    </div>
+                </div>
+
+                <!-- Author Info (if not logged in) -->
+                {% if not current_user.is_authenticated %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="fb_name">Your Name *</label>
+                        <input type="text" id="fb_name" name="name" class="form-control" placeholder="e.g. Priya Sharma" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="fb_email">Email Address *</label>
+                        <input type="email" id="fb_email" name="email" class="form-control" placeholder="priya@example.com" required>
+                    </div>
+                </div>
+                {% else %}
+                <div style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="{% if current_user.avatar and current_user.avatar != 'default_avatar.png' %}{{ url_for('static', filename='uploads/' + current_user.avatar) }}{% else %}https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80{% endif %}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" alt="{{ current_user.username }}">
+                    <div>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Posting as: {{ current_user.full_name }}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);"> ({{ current_user.email }})</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Category & Destination Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="fb_category">Category</label>
+                        <select id="fb_category" name="category" class="form-control">
+                            <option value="Trip Experience">Trip & Itinerary Experience</option>
+                            <option value="Destination Review">Destination & City Review</option>
+                            <option value="Budget Planner">Budget & Currency Planner</option>
+                            <option value="App Feature">Platform / Feature Feedback</option>
+                            <option value="General Feedback">General Feedback</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="fb_destination">Tag Destination (Optional)</label>
+                        <input type="text" id="fb_destination" name="destination_name" class="form-control" placeholder="e.g. Tokyo, Japan / Paris / Goa" list="citiesList">
+                        <datalist id="citiesList">
+                            {% for c in cities %}
+                                <option value="{{ c.name }}, {{ c.country }}">
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+
+                <!-- Review Title & Message -->
+                <div class="form-group">
+                    <label class="form-label" for="fb_title">Review Title *</label>
+                    <input type="text" id="fb_title" name="title" class="form-control" placeholder="e.g. Unforgettable 7-Day Japan Journey!" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="fb_message">Your Feedback / Travel Story *</label>
+                    <textarea id="fb_message" name="message" class="form-control" rows="3" placeholder="Tell us about the highlights, budget tips, or your experience using GlobeTrotter..." required></textarea>
+                </div>
+
+                <!-- Real-Time Photo Capture Component -->
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fa-solid fa-camera"></i> Attach Travel Photo (Live Camera or File)</span>
+                        <span class="badge badge-ongoing" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt"></i> Real-Time</span>
+                    </label>
+
+                    <div class="camera-component" data-camera-component id="feedback-camera">
+                        <div class="camera-tabs">
+                            <button type="button" class="camera-tab-btn btn-tab-camera active">
+                                <i class="fa-solid fa-video"></i> Live Camera Snapshot
+                            </button>
+                            <button type="button" class="camera-tab-btn btn-tab-upload">
+                                <i class="fa-solid fa-upload"></i> Upload Image File
+                            </button>
+                        </div>
+
+                        <!-- Live Camera Stream & Viewfinder -->
+                        <div class="camera-view-box">
+                            <div class="camera-viewfinder" style="height: 200px; max-width: 280px;">
+                                <video class="camera-video" playsinline autoplay muted></video>
+                                <img class="camera-preview-img" alt="Captured Feedback Photo">
+                                <div class="camera-placeholder">
+                                    <i class="fa-solid fa-camera-retro" style="font-size: 2.5rem; color: #475569;"></i>
+                                    <span style="font-size: 0.8rem;">Click below to capture live photo</span>
+                                </div>
+                            </div>
+
+                            <div class="camera-status-text status-info">Ready to capture photo</div>
+
+                            <div class="camera-controls">
+                                <button type="button" class="btn btn-primary btn-sm btn-start-camera">
+                                    <i class="fa-solid fa-camera"></i> Start Camera
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm btn-capture-photo" style="display: none; background: #059669; border-color: #059669;">
+                                    <i class="fa-solid fa-circle-dot"></i> Snap Moment
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-switch-camera" style="display: none;" title="Flip Camera">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-retake-photo" style="display: none;">
+                                    <i class="fa-solid fa-rotate-left"></i> Retake
+                                </button>
+                            </div>
+
+                            <!-- Hidden Base64 string -->
+                            <input type="hidden" name="captured_photo" class="camera-hidden-input">
+                        </div>
+
+                        <!-- Standard File Upload -->
+                        <div class="camera-upload-box" style="display: none; padding: 0.5rem 0;">
+                            <input type="file" id="fb_photo" name="photo" class="form-control camera-file-input" accept="image/*">
+                            <p class="form-help" style="margin-top: 0.35rem;">Formats: JPG, PNG, WEBP (Max 16MB)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.75rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Publish Feedback & Rating
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Community Reviews Wall Feed -->
+    <div>
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Verified Community Reviews ({{ feedbacks|length }})</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Real stories and ratings from the GlobeTrotter traveler network</p>
+            </div>
+        </div>
+
+        {% if feedbacks %}
+            <div class="grid-3">
+                {% for fb in feedbacks %}
+                <div class="review-card card-lift">
+                    <div>
+                        <!-- Header: Author & Rating -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                {% if fb.display_avatar and fb.display_avatar != 'default_avatar.png' %}
+                                    <img src="{{ url_for('static', filename='uploads/' + fb.display_avatar) }}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover;" alt="{{ fb.display_author }}">
+                                {% else %}
+                                    <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                        {{ fb.display_author[:1] }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">
+                                        {{ fb.display_author }}
+                                    </div>
+                                    <span class="verified-badge">
+                                        <i class="fa-solid fa-circle-check"></i> Verified Traveler
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Rating Stars -->
+                            <div style="color: #f59e0b; font-size: 0.95rem;">
+                                {% for i in range(fb.rating) %}
+                                    <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                                {% for i in range(5 - fb.rating) %}
+                                    <i class="fa-regular fa-star" style="color: #cbd5e1;"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Category & Destination Badges -->
+                        <div style="display: flex; gap: 0.4rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                            <span class="badge badge-category">{{ fb.category }}</span>
+                            {% if fb.destination_name %}
+                                <span class="badge badge-public">
+                                    <i class="fa-solid fa-location-dot"></i> {{ fb.destination_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Review Title & Message -->
+                        <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-primary);">{{ fb.title }}</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 0.75rem;">
+                            {{ fb.message }}
+                        </p>
+
+                        <!-- Attached Live Photo if present -->
+                        {% if fb.photo %}
+                        <div>
+                            <img src="{{ url_for('static', filename='uploads/' + fb.photo) }}" alt="Review Photo" class="review-photo-thumb" onclick="window.open(this.src, '_blank')">
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                                <i class="fa-solid fa-camera"></i> Live Captured Photo
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Footer: Timestamp -->
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 0.75rem; margin-top: 1rem; font-size: 0.78rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fa-regular fa-calendar"></i> {{ fb.created_at.strftime('%b %d, %Y') if fb.created_at else 'Recent' }}</span>
+                        {% if fb.is_featured %}
+                            <span style="color: var(--primary); font-weight: 700;"><i class="fa-solid fa-award"></i> Featured Review</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 3rem; text-align: center;">
+                <div style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fa-regular fa-comments"></i></div>
+                <h3 style="margin-bottom: 0.5rem;">No reviews found for this filter</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Be the first to rate your journey and share feedback!</p>
+                <a href="{{ url_for('feedback.index') }}" class="btn btn-primary btn-sm">Clear Filters</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateRatingLabel(stars) {
+    const descEl = document.getElementById('ratingDescription');
+    const descriptions = {
+        5: '★★★★★ 5 Stars — Excellent Experience!',
+        4: '★★★★☆ 4 Stars — Very Good & Recommended',
+        3: '★★★☆☆ 3 Stars — Good / Satisfactory',
+        2: '★★☆☆☆ 2 Stars — Fair / Needs Improvement',
+        1: '★☆☆☆☆ 1 Star — Poor Experience'
+    };
+    if (descEl) descEl.textContent = descriptions[stars] || `${stars} Stars`;
+}
+</script>
+{% endblock %}

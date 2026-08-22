@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Abroad Travel Currency Converter — GlobeTrotter{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Page Header -->
+    <div style="text-align: center; max-width: 750px; margin: 0 auto 2.5rem;">
+        <span class="badge badge-ongoing" style="margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-plane-departure"></i> International Travel Toolkit
+        </span>
+        <h1 style="font-size: 2.4rem; margin-bottom: 0.5rem;">Abroad Travel Currency Converter</h1>
+        <p style="color: var(--text-secondary); font-size: 1.05rem;">
+            Planning a trip abroad from India or across borders? Instantly convert budgets, calculate foreign exchange rates, and compare daily spending across popular world destinations.
+        </p>
+    </div>
+
+    <!-- Main Converter Card -->
+    <div class="converter-card" style="max-width: 820px; margin: 0 auto 3.5rem;">
+        <form id="currencyForm" method="GET" action="{{ url_for('currency.converter') }}">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem; position: relative;">
+                
+                <!-- From Currency Input Group -->
+                <div>
+                    <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">
+                        Amount You Have / Base Currency
+                    </label>
+                    <div class="converter-input-group">
+                        <input type="number" step="any" min="1" id="amountInput" name="amount" class="converter-amount-input" value="{{ amount|round(2) }}" placeholder="e.g. 50000" required>
+                        <select id="fromCurrency" name="from" class="converter-select">
+                            {% for code, data in rates_data.items() %}
+                                <option value="{{ code }}" {% if code == from_curr %}selected{% endif %}>
+                                    {{ data.flag }} {{ code }} ({{ data.symbol }}) - {{ data.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div style="text-align: center;">
+                    <button type="button" id="swapCurrenciesBtn" class="btn-swap-currency" title="Swap Currencies">
+                        <i class="fa-solid fa-arrow-down-up-across-line"></i>
+                    </button>
+                </div>
+
+                <!-- To Currency Output Group -->
+                <div>
+                    <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">
+                        Converted Abroad Value
+                    </label>
+                    <div class="converter-input-group" style="background: #eef2ff; border-color: var(--border-focus);">
+                        <input type="text" id="convertedResult" class="converter-amount-input" value="{{ converted_amount|round(2) }}" readonly style="color: var(--primary);">
+                        <select id="toCurrency" name="to" class="converter-select">
+                            {% for code, data in rates_data.items() %}
+                                <option value="{{ code }}" {% if code == to_curr %}selected{% endif %}>
+                                    {{ data.flag }} {{ code }} ({{ data.symbol }}) - {{ data.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Preset Amount Chips for Fast Selection -->
+            <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;">Quick Presets (INR):</span>
+                <button type="button" class="preset-chip" onclick="setPreset(5000)">₹5,000</button>
+                <button type="button" class="preset-chip" onclick="setPreset(25000)">₹25,000</button>
+                <button type="button" class="preset-chip" onclick="setPreset(50000)">₹50,000</button>
+                <button type="button" class="preset-chip" onclick="setPreset(100000)">₹1,00,000</button>
+                <button type="button" class="preset-chip" onclick="setPreset(250000)">₹2,50,000</button>
+                <button type="button" class="preset-chip" onclick="setPreset(500000)">₹5,00,000</button>
+            </div>
+
+            <!-- Rate Pill & Timestamp -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary);" id="rateSummary">
+                    Exchange Rate: <strong>1 {{ from_curr }} = {{ "%.4f"|format(rate) }} {{ to_curr }}</strong>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--accent-emerald); font-weight: 600;">
+                    <i class="fa-solid fa-circle-check"></i> Live Forex Travel Rates Active
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Multi-Destination Travel Budget Matrix Section -->
+    <div style="margin-bottom: 4rem;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">What Your Budget ({{ from_curr }} {{ "{:,.0f}".format(amount) }}) Gets You Worldwide</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                    Instant travel budget value and estimated daily expenditure across popular destinations outside India
+                </p>
+            </div>
+        </div>
+
+        <div class="grid-3" id="destinationsGrid">
+            {% for dest in popular_destinations %}
+            <div class="destination-currency-card card-lift" data-dest-code="{{ dest.code }}">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <span style="font-size: 1.6rem; margin-right: 0.35rem;">{{ dest.flag }}</span>
+                            <strong style="font-size: 1.15rem; color: var(--text-primary);">{{ dest.country }}</strong>
+                        </div>
+                        <span class="badge badge-category">{{ dest.code }}</span>
+                    </div>
+                    
+                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-location-dot"></i> {{ dest.cities }}
+                    </p>
+
+                    <div style="background: #f8fafc; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 0.75rem;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Your Total Budget In {{ dest.code }}</div>
+                        <div class="dest-converted-val" style="font-size: 1.45rem; font-weight: 800; color: var(--primary); margin-top: 0.15rem;">
+                            {{ dest.symbol }}{{ "{:,.2f}".format(dest.converted_amount) }}
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        <i class="fa-solid fa-wallet" style="color: var(--accent-amber);"></i> 
+                        Est. Daily Spend: <strong>{{ dest.daily_budget_foreign }}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">({{ dest.daily_budget_inr }})</span>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); background: #fffbeb; padding: 0.6rem 0.75rem; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-amber); margin-top: 0.75rem;">
+                        <i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> 
+                        {{ dest.tip }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Essential Forex Travel Guide for Indian Travelers Abroad -->
+    <div class="card" style="padding: 2.5rem; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); color: #ffffff; border-radius: var(--radius-lg);">
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 2.5rem;">
+            <h2 style="font-size: 1.9rem; color: #ffffff; margin-bottom: 0.5rem;">Top Money & Forex Tips for Traveling Abroad</h2>
+            <p style="color: #cbd5e1; font-size: 0.95rem;">Master your travel finances before stepping onto international flights.</p>
+        </div>
+
+        <div class="grid-3">
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 1.5rem; color: #818cf8; margin-bottom: 0.75rem;"><i class="fa-solid fa-credit-card"></i></div>
+                <h3 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0.35rem;">Zero Forex Markup Cards</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                    Use zero-forex debit or credit cards (like Niyo, Fi, or Scapia) instead of regular cards which charge up to 3.5% + GST markup per swipe.
+                </p>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 1.5rem; color: #22d3ee; margin-bottom: 0.75rem;"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                <h3 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0.35rem;">Always Pay in Local Currency</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                    When POS card machines abroad ask whether to charge in INR or Local Currency, always choose <strong>Local Currency</strong> to avoid dynamic currency conversion (DCC) fee penalties.
+                </p>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 1.5rem; color: #34d399; margin-bottom: 0.75rem;"><i class="fa-solid fa-vault"></i></div>
+                <h3 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0.35rem;">Emergency Cash & LRS Limits</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                    Indian travelers are permitted to carry up to $3,000 (or equivalent in foreign currency notes) in cash under RBI Liberalised Remittance Scheme (LRS).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Dynamic Instant Client-side calculation for Abroad Currency Converter
+const ratesData = {{ rates_data|tojson }};
+
+function calculateConversion() {
+    const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+    const from = document.getElementById('fromCurrency').value;
+    const to = document.getElementById('toCurrency').value;
+
+    const fromInfo = ratesData[from] || ratesData['INR'];
+    const toInfo = ratesData[to] || ratesData['USD'];
+
+    let amountInINR = from === 'INR' ? amount : (amount / fromInfo.rate);
+    let converted = to === 'INR' ? amountInINR : (amountInINR * toInfo.rate);
+    let rate = (toInfo.rate / fromInfo.rate);
+
+    // Update main result
+    document.getElementById('convertedResult').value = `${toInfo.symbol}${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    
+    // Update summary text
+    document.getElementById('rateSummary').innerHTML = `Exchange Rate: <strong>1 ${from} = ${rate.toFixed(4)} ${to}</strong> (${toInfo.name})`;
+
+    // Update destination cards matrix
+    document.querySelectorAll('.destination-currency-card').forEach(card => {
+        const destCode = card.getAttribute('data-dest-code');
+        const destRate = ratesData[destCode];
+        if (destRate) {
+            let destVal = amountInINR * destRate.rate;
+            const destValEl = card.querySelector('.dest-converted-val');
+            if (destValEl) {
+                destValEl.textContent = `${destRate.symbol}${destVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+        }
+    });
+}
+
+function setPreset(val) {
+    document.getElementById('amountInput').value = val;
+    document.getElementById('fromCurrency').value = 'INR';
+    calculateConversion();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const amountInput = document.getElementById('amountInput');
+    const fromSelect = document.getElementById('fromCurrency');
+    const toSelect = document.getElementById('toCurrency');
+    const swapBtn = document.getElementById('swapCurrenciesBtn');
+
+    if (amountInput) amountInput.addEventListener('input', calculateConversion);
+    if (fromSelect) fromSelect.addEventListener('change', calculateConversion);
+    if (toSelect) toSelect.addEventListener('change', calculateConversion);
+
+    if (swapBtn) {
+        swapBtn.addEventListener('click', () => {
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            calculateConversion();
+        });
+    }
+
+    calculateConversion();
+});
+</script>
+{% endblock %}

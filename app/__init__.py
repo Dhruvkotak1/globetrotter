@@ -21,6 +21,8 @@ def create_app(config_class=Config):
     from app.budget.routes import budget_bp
     from app.community.routes import community_bp
     from app.admin.routes import admin_bp
+    from app.currency.routes import currency_bp
+    from app.feedback.routes import feedback_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(trips_bp, url_prefix='/trips')
@@ -28,14 +30,24 @@ def create_app(config_class=Config):
     app.register_blueprint(budget_bp)
     app.register_blueprint(community_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(currency_bp)
+    app.register_blueprint(feedback_bp)
 
     # Main landing page
     @app.route('/')
     def index():
-        from app.models import City, Trip
+        from app.models import City, Trip, Feedback
         popular_cities = City.query.order_by(City.popularity.desc()).limit(8).all()
         featured_trips = Trip.query.filter_by(visibility='public').order_by(Trip.created_at.desc()).limit(4).all()
-        return render_template('index.html', popular_cities=popular_cities, featured_trips=featured_trips)
+        featured_feedbacks = Feedback.query.filter_by(is_featured=True).order_by(Feedback.created_at.desc()).limit(3).all()
+        if not featured_feedbacks:
+            featured_feedbacks = Feedback.query.order_by(Feedback.rating.desc(), Feedback.created_at.desc()).limit(3).all()
+        return render_template(
+            'index.html',
+            popular_cities=popular_cities,
+            featured_trips=featured_trips,
+            featured_feedbacks=featured_feedbacks
+        )
 
     # Custom template filters
     @app.template_filter('currency')

@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 import secrets
 from app import create_app
 from app.extensions import db
-from app.models import User, City, Activity, Trip, TripStop, TripActivity, CustomExpense, SavedDestination, TripLike
+from app.models import User, City, Activity, Trip, TripStop, TripActivity, CustomExpense, SavedDestination, TripLike, Feedback
 
 app = create_app()
 
@@ -401,6 +401,61 @@ def seed_database():
         db.session.add(TripLike(user_id=traveler.id, trip_id=trip2.id))
         db.session.add(TripLike(user_id=admin.id, trip_id=trip2.id))
         db.session.add(TripLike(user_id=sarah.id, trip_id=trip1.id))
+
+        # Seed Verified Traveler Feedback & Ratings
+        fb1 = Feedback(
+            user_id=traveler.id,
+            name='Alex Morgan',
+            email='traveler@globetrotter.com',
+            rating=5,
+            category='Trip Experience',
+            destination_name='Tokyo, Japan',
+            title='Flawless 10-Day Multi-City Japan Itinerary!',
+            message='Planning our journey between Tokyo and Kyoto was unbelievably smooth. The budget breakdown accurately forecasted our train and ramen expenses in Yen!',
+            is_featured=True,
+            created_at=datetime.utcnow() - timedelta(days=3)
+        )
+
+        fb2 = Feedback(
+            user_id=sarah.id,
+            name='Sarah Jenkins',
+            email='sarah@globetrotter.com',
+            rating=5,
+            category='Destination Review',
+            destination_name='Bali, Indonesia',
+            title='Mesmerizing Ubud Waterfalls & Sunsets',
+            message='The activity builder helped us schedule sunrise volcano treks and sacred temple visits without any guesswork. The currency converter saved us lots of Rupiah math!',
+            is_featured=True,
+            created_at=datetime.utcnow() - timedelta(days=7)
+        )
+
+        fb3 = Feedback(
+            user_id=None,
+            name='Rohan Patel',
+            email='rohan.travels@gmail.com',
+            rating=5,
+            category='Budget Planner',
+            destination_name='Paris, France',
+            title='Best Abroad Travel Forex & Budget Tool for Indians',
+            message='Traveling abroad from Mumbai to Europe for the first time was daunting, but the INR to EUR converter and real-time expense logger kept our entire honeymoon strictly on budget.',
+            is_featured=True,
+            created_at=datetime.utcnow() - timedelta(days=10)
+        )
+
+        fb4 = Feedback(
+            user_id=admin.id,
+            name='Admin Traveler',
+            email='admin@globetrotter.com',
+            rating=4,
+            category='Platform Feature',
+            destination_name='Rome, Italy',
+            title='Real-time Camera Capture is a Game Changer',
+            message='Love how quickly I can snap live travel photos right from my browser and attach them to my itinerary reviews.',
+            is_featured=False,
+            created_at=datetime.utcnow() - timedelta(days=14)
+        )
+
+        db.session.add_all([fb1, fb2, fb3, fb4])
         
         db.session.commit()
         print("[SUCCESS] Database successfully seeded with rich travel data!")

@@ -80,11 +80,62 @@
                     </div>
                 </div>
 
-                <!-- Profile Photo -->
+                <!-- Profile Photo: Live Camera Snapshot or File Upload -->
                 <div class="form-group">
-                    <label class="form-label" for="avatar">Profile Photo (Optional)</label>
-                    <input type="file" id="avatar" name="avatar" class="form-control" accept="image/*">
-                    <p class="form-help">Supported formats: JPG, PNG, WEBP (Max 16MB)</p>
+                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fa-solid fa-camera"></i> Profile Photo (Live Camera or File)</span>
+                        <span class="badge badge-ongoing" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt"></i> Real-Time Capture</span>
+                    </label>
+
+                    <div class="camera-component" data-camera-component id="signup-camera">
+                        <!-- Navigation Tabs -->
+                        <div class="camera-tabs">
+                            <button type="button" class="camera-tab-btn btn-tab-camera active">
+                                <i class="fa-solid fa-video"></i> Live Camera
+                            </button>
+                            <button type="button" class="camera-tab-btn btn-tab-upload">
+                                <i class="fa-solid fa-upload"></i> Upload File
+                            </button>
+                        </div>
+
+                        <!-- Live Camera Viewfinder Box -->
+                        <div class="camera-view-box">
+                            <div class="camera-viewfinder">
+                                <video class="camera-video" playsinline autoplay muted></video>
+                                <img class="camera-preview-img" alt="Captured Profile Preview">
+                                <div class="camera-placeholder">
+                                    <i class="fa-solid fa-user-tie" style="font-size: 3rem; color: #475569;"></i>
+                                    <span style="font-size: 0.85rem;">Click "Start Camera" to take your profile picture</span>
+                                </div>
+                            </div>
+
+                            <div class="camera-status-text status-info">Ready to capture photo</div>
+
+                            <div class="camera-controls">
+                                <button type="button" class="btn btn-primary btn-sm btn-start-camera">
+                                    <i class="fa-solid fa-camera"></i> Start Camera
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm btn-capture-photo" style="display: none; background: #059669; border-color: #059669;">
+                                    <i class="fa-solid fa-circle-dot"></i> Take Photo
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-switch-camera" style="display: none;" title="Flip Camera">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-retake-photo" style="display: none;">
+                                    <i class="fa-solid fa-rotate-left"></i> Retake Photo
+                                </button>
+                            </div>
+
+                            <!-- Hidden Base64 string for live photo -->
+                            <input type="hidden" name="captured_avatar" class="camera-hidden-input">
+                        </div>
+
+                        <!-- Traditional File Upload Box -->
+                        <div class="camera-upload-box" style="display: none; padding: 1rem 0;">
+                            <input type="file" id="avatar" name="avatar" class="form-control camera-file-input" accept="image/*">
+                            <p class="form-help" style="margin-top: 0.5rem;">Supported formats: JPG, PNG, WEBP (Max 16MB)</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Bio / Additional Information -->

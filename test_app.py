@@ -148,6 +148,97 @@ class GlobeTrotterTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Platform Analytics & Administration', res.data)
         self.assertIn(b'User Management', res.data)
+        self.assertIn(b'Feedback & Ratings Moderation', res.data)
+
+    def test_realtime_photo_capture_signup_and_profile(self):
+        """Feature 1: Live Webcam Photo Capture during Registration and Profile update"""
+        # 1x1 pixel transparent PNG in Base64
+        sample_base64_photo = (
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        )
+        
+        # Test Signup with real-time camera photo
+        res = self.client.post('/signup', data={
+            'first_name': 'CamTester',
+            'last_name': 'Live',
+            'username': 'cam_tester_2026',
+            'email': 'camtester@example.com',
+            'password': 'password123',
+            'confirm_password': 'password123',
+            'city': 'Mumbai',
+            'country': 'India',
+            'captured_avatar': sample_base64_photo
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        
+        with self.app.app_context():
+            user = User.query.filter_by(username='cam_tester_2026').first()
+            self.assertIsNotNone(user)
+            self.assertTrue(user.avatar.startswith('user_cam_tester_2026_live_'))
+
+    def test_abroad_currency_converter(self):
+        """Feature 2: Abroad Travel Currency Converter for International Travel"""
+        # Test Converter Page
+        res = self.client.get('/currency-converter?from=INR&to=USD&amount=83330')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Abroad Travel Currency Converter', res.data)
+        self.assertIn(b'What Your Budget', res.data)
+
+        # Test API Convert endpoint
+        res = self.client.post('/api/currency/convert', json={
+            'amount': 83330,
+            'from': 'INR',
+            'to': 'USD'
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['from'], 'INR')
+        self.assertEqual(data['to'], 'USD')
+        self.assertGreater(data['converted'], 0)
+
+        # Test API Rates endpoint
+        res = self.client.get('/api/currency/rates')
+        self.assertEqual(res.status_code, 200)
+        rates_json = res.get_json()
+        self.assertTrue(rates_json['success'])
+        self.assertIn('EUR', rates_json['rates'])
+        self.assertIn('JPY', rates_json['rates'])
+
+    def test_feedback_rating_and_photo_submission(self):
+        """Feature 3: Rating and Live Photo in Feedback Submission"""
+        sample_base64_photo = (
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        )
+
+        # Feedback Hub page load
+        res = self.client.get('/feedback')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Traveler Feedback & Ratings', res.data)
+        self.assertIn(b'Submit Your Review & Rating', res.data)
+
+        # Submit Feedback with 5-star rating & live photo
+        res = self.client.post('/feedback', data={
+            'name': 'Kavita Singh',
+            'email': 'kavita@example.com',
+            'rating': '5',
+            'category': 'Trip Experience',
+            'destination_name': 'Kyoto, Japan',
+            'title': 'Magical Bamboo Groves and Golden Temple',
+            'message': 'Our trip itinerary was impeccably organized. The currency converter was an absolute lifesaver!',
+            'captured_photo': sample_base64_photo
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Thank you for your 5', res.data)
+        self.assertIn(b'Magical Bamboo Groves and Golden Temple', res.data)
+
+        with self.app.app_context():
+            from app.models import Feedback
+            fb = Feedback.query.filter_by(title='Magical Bamboo Groves and Golden Temple').first()
+            self.assertIsNotNone(fb)
+            self.assertEqual(fb.rating, 5)
+            self.assertTrue(fb.photo.startswith('feedback_live_'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models import User, Trip, City, SavedDestination
+from app.utils import save_image_from_request, allowed_file
 from app.auth import auth_bp
 
 def allowed_file(filename):
@@ -80,15 +81,13 @@ def signup():
             flash('Email is already registered. Please log in.', 'warning')
             return render_template('auth/signup.html')
             
-        # Avatar file upload handling
-        avatar_filename = 'default_avatar.png'
-        if 'avatar' in request.files:
-            file = request.files['avatar']
-            if file and file.filename and allowed_file(file.filename):
-                safe_name = secure_filename(file.filename)
-                unique_name = f"user_{secrets.token_hex(8)}_{safe_name}"
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name))
-                avatar_filename = unique_name
+        # Avatar handling (live camera snapshot or file upload)
+        uploaded_avatar = save_image_from_request(
+            file_field='avatar',
+            base64_field='captured_avatar',
+            prefix=f"user_{username}"
+        )
+        avatar_filename = uploaded_avatar or 'default_avatar.png'
                 
         user = User(
             username=username,
@@ -198,14 +197,14 @@ def profile():
                 current_user.set_password(new_password)
                 flash('Password updated successfully.', 'success')
                 
-        # Handle avatar change
-        if 'avatar' in request.files:
-            file = request.files['avatar']
-            if file and file.filename and allowed_file(file.filename):
-                safe_name = secure_filename(file.filename)
-                unique_name = f"user_{secrets.token_hex(8)}_{safe_name}"
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name))
-                current_user.avatar = unique_name
+        # Handle avatar change (live camera snapshot or file upload)
+        new_avatar = save_image_from_request(
+            file_field='avatar',
+            base64_field='captured_avatar',
+            prefix=f"user_{current_user.username}"
+        )
+        if new_avatar:
+            current_user.avatar = new_avatar
                 
         db.session.commit()
         flash('Profile settings updated successfully!', 'success')

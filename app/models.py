@@ -27,6 +27,7 @@ class User(UserMixin, db.Model):
     trips = db.relationship('Trip', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
     saved_destinations = db.relationship('SavedDestination', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
     likes = db.relationship('TripLike', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
+    feedbacks = db.relationship('Feedback', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -423,3 +424,54 @@ class TripLike(db.Model):
 
     def __repr__(self):
         return f"<TripLike Trip:{self.trip_id} User:{self.user_id}>"
+
+
+class Feedback(db.Model):
+    __tablename__ = 'feedbacks'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    rating = db.Column(db.Integer, nullable=False, default=5) # 1 to 5 stars
+    category = db.Column(db.String(50), default='Trip Experience') # Trip Experience, Destination Review, Budget Planner, App Feature, General Feedback
+    destination_name = db.Column(db.String(100), default='')
+    title = db.Column(db.String(150), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    photo = db.Column(db.String(256), nullable=True) # Real-time captured or uploaded photo filename
+    is_featured = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', back_populates='feedbacks')
+
+    @property
+    def display_author(self):
+        if self.user:
+            return self.user.full_name or self.user.username
+        return self.name or "Anonymous Traveler"
+
+    @property
+    def display_avatar(self):
+        if self.user and self.user.avatar and self.user.avatar != 'default_avatar.png':
+            return self.user.avatar
+        return 'default_avatar.png'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'name': self.display_author,
+            'email': self.email,
+            'rating': self.rating,
+            'category': self.category,
+            'destination_name': self.destination_name,
+            'title': self.title,
+            'message': self.message,
+            'photo': self.photo,
+            'is_featured': self.is_featured,
+            'created_at': self.created_at.strftime('%b %d, %Y') if self.created_at else ''
+        }
+
+    def __repr__(self):
+        return f"<Feedback {self.title} - {self.rating} Stars>"
