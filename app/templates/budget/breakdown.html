@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Budget Breakdown — {{ trip.title }}{% endblock %}
+
+{% block content %}
+<!-- Screen 9: Trip Budget & Cost Breakdown Screen -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Top Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h1 style="font-size: 2.2rem;">Budget & Cost Analytics</h1>
+                <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Financial summary and expense visualizations for <strong>{{ trip.title }}</strong>
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-eye"></i> View Itinerary Timeline
+            </a>
+            {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-pen"></i> Edit Builder
+                </a>
+            {% endif %}
+            <a href="{{ url_for('itinerary.trip_calendar', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-regular fa-calendar-days"></i> Calendar View
+            </a>
+        </div>
+    </div>
+
+    <!-- Overbudget Alert Banner -->
+    {% if is_overbudget %}
+    <div class="alert alert-danger" style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Over Budget Warning:</strong> Your total estimated expenditures (${{ "%.2f"|format(total_cost) }}) exceed your target budget limit (${{ "%.2f"|format(trip.target_budget) }}) by <strong>${{ "%.2f"|format(total_cost - trip.target_budget) }}</strong>.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stat Highlights Grid -->
+    <div class="budget-summary-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--primary);">{{ total_cost|currency }}</div>
+                <div class="stat-label">Total Estimated Cost</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <div>
+                <div class="stat-value">{% if trip.target_budget and trip.target_budget > 0 %}{{ trip.target_budget|currency }}{% else %}No Limit{% endif %}</div>
+                <div class="stat-label">Target Budget Goal</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #ecfdf5; color: #059669;">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: #059669;">{{ per_day_cost|currency }}</div>
+                <div class="stat-label">Average Spend / Day</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef2f2; color: #dc2626;">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ budget_pct }}%</div>
+                <div class="stat-label">Budget Utilization</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Progress Bar -->
+    {% if trip.target_budget and trip.target_budget > 0 %}
+    <div class="budget-progress-container">
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600;">
+            <span>Budget Progress: {{ total_cost|currency }} of {{ trip.target_budget|currency }}</span>
+            <span style="color: {% if is_overbudget %}var(--accent-rose){% else %}var(--accent-emerald){% endif %};">
+                {% if is_overbudget %}Overbudget by {{ (total_cost - trip.target_budget)|currency }}{% else %}{{ (trip.target_budget - total_cost)|currency }} Remaining{% endif %}
+            </span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill {% if is_overbudget %}overbudget{% endif %}" style="width: {{ budget_pct }}%;"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Charts Section: Donut + Daily Bar Chart -->
+    <div class="grid-2" style="margin-bottom: 3rem;">
+        <!-- Category Breakdown Chart -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">
+                <i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Expense Breakdown by Category
+            </h3>
+            <div style="height: 280px; position: relative;">
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-around; font-size: 0.85rem; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div><span style="color: #4f46e5; font-weight: 800;">&bull;</span> Transport: <strong>${{ "%.2f"|format(breakdown['transport']) }}</strong></div>
+                <div><span style="color: #06b6d4; font-weight: 800;">&bull;</span> Stay: <strong>${{ "%.2f"|format(breakdown['stay']) }}</strong></div>
+                <div><span style="color: #10b981; font-weight: 800;">&bull;</span> Activities: <strong>${{ "%.2f"|format(breakdown['activities']) }}</strong></div>
+                <div><span style="color: #f59e0b; font-weight: 800;">&bull;</span> Meals: <strong>${{ "%.2f"|format(breakdown['meals']) }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Daily Expenditure Bar Chart -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">
+                <i class="fa-solid fa-chart-simple" style="color: var(--primary);"></i> Daily Estimated Spend
+            </h3>
+            <div style="height: 280px; position: relative;">
+                <canvas id="dailySpendBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Expenses Logger Section -->
+    <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-size: 1.3rem;">Custom Expenses & Additional Receipts</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Log extra costs like travel insurance, souvenirs, airport meals, or visa fees</p>
+            </div>
+            {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                <button onclick="openModal('addExpenseModal')" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-plus"></i> Add Custom Expense
+                </button>
+            {% endif %}
+        </div>
+
+        {% if trip.custom_expenses %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-light); text-align: left; color: var(--text-muted);">
+                            <th style="padding: 0.75rem 1rem;">Title / Description</th>
+                            <th style="padding: 0.75rem 1rem;">Category</th>
+                            <th style="padding: 0.75rem 1rem;">Date</th>
+                            <th style="padding: 0.75rem 1rem; text-align: right;">Amount</th>
+                            {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                                <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in trip.custom_expenses %}
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 600;">
+                                {{ exp.title }}
+                                {% if exp.notes %}<br><small style="color: var(--text-muted); font-weight: normal;">{{ exp.notes }}</small>{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                <span class="badge badge-category">{{ exp.category }}</span>
+                            </td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                {{ exp.expense_date|date_format('%b %d, %Y') if exp.expense_date else 'General' }}
+                            </td>
+                            <td style="padding: 0.85rem 1rem; text-align: right; font-weight: 700; color: var(--primary);">
+                                {{ exp.amount|currency }}
+                            </td>
+                            {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                            <td style="padding: 0.85rem 1rem; text-align: right;">
+                                <form action="{{ url_for('budget.delete_expense', expense_id=exp.id) }}" method="POST" onsubmit="return confirm('Delete this expense?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-icon" style="color: var(--accent-rose);">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2rem; border: 1px dashed var(--border-light); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.9rem;">
+                No custom expenses logged. Transportation, stay, and activities logged in your itinerary builder are already accounted for in the charts above.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Add Custom Expense -->
+<div id="addExpenseModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;"><i class="fa-solid fa-receipt"></i> Log Custom Expense</h3>
+            <button class="alert-close" onclick="closeModal('addExpenseModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('budget.add_expense', trip_id=trip.id) }}" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="exp_title">Expense Title *</label>
+                    <input type="text" id="exp_title" name="title" class="form-control" placeholder="e.g. Travel Insurance, Pocket WiFi, Souvenir Budget..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="exp_amount">Amount ($) *</label>
+                        <input type="number" step="0.5" min="0" id="exp_amount" name="amount" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="exp_category">Category</label>
+                        <select id="exp_category" name="category" class="form-control">
+                            <option value="Shopping & Souvenirs">Shopping & Souvenirs</option>
+                            <option value="Meals & Dining">Meals & Dining</option>
+                            <option value="Transport & Flights">Transport & Flights</option>
+                            <option value="Accommodation">Accommodation</option>
+                            <option value="Insurance & Visas">Insurance & Visas</option>
+                            <option value="Other">Other Miscellaneous</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="exp_date">Date Incurred (Optional)</label>
+                    <input type="date" id="exp_date" name="expense_date" class="form-control" value="{{ trip.start_date.isoformat() }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="exp_notes">Notes / Receipt Reference</label>
+                    <textarea id="exp_notes" name="notes" class="form-control" placeholder="Add any details or receipts..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addExpenseModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/budget_chart.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const categoryData = {{ breakdown|tojson }};
+        const dailyData = {
+            labels: {{ day_labels|tojson }},
+            costs: {{ day_costs|tojson }}
+        };
+        initBudgetCharts({{ trip.id }}, categoryData, dailyData);
+    });
+</script>
+{% endblock %}

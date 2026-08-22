@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore Activities & Experiences — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 8: Activity Search Screen (Wireframe Screen 8) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <div class="section-header">
+        <div>
+            <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Activity & Experience Search</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Browse sightseeing tours, foodie masterclasses, outdoor adventures, and cultural landmarks</p>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: var(--shadow-sm);">
+        <form action="{{ url_for('itinerary.activity_search') }}" method="GET" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <div class="input-icon-wrapper" style="flex: 2; min-width: 240px;">
+                    <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search experiences (e.g. Louvre, Scuba Diving, Food Tour...)">
+                </div>
+
+                <div style="flex: 1; min-width: 150px;">
+                    <select name="city_id" class="form-control">
+                        <option value="">All Destinations</option>
+                        {% for c in all_cities %}
+                            <option value="{{ c.id }}" {% if selected_city == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 150px;">
+                    <select name="category" class="form-control">
+                        <option value="all">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 140px;">
+                    <select name="max_cost" class="form-control">
+                        <option value="">Any Cost</option>
+                        <option value="0" {% if max_cost == '0' %}selected{% endif %}>Free ($0)</option>
+                        <option value="50" {% if max_cost == '50' %}selected{% endif %}>Under $50</option>
+                        <option value="150" {% if max_cost == '150' %}selected{% endif %}>Under $150</option>
+                        <option value="300" {% if max_cost == '300' %}selected{% endif %}>Under $300</option>
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 140px;">
+                    <select name="sort" class="form-control">
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="cost_asc" {% if sort_by == 'cost_asc' %}selected{% endif %}>Cost: Low to High</option>
+                        <option value="cost_desc" {% if sort_by == 'cost_desc' %}selected{% endif %}>Cost: High to Low</option>
+                        <option value="duration" {% if sort_by == 'duration' %}selected{% endif %}>Shortest Duration</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.25rem;">
+                    <i class="fa-solid fa-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Activities Grid -->
+    {% if activities %}
+        <div class="grid-3">
+            {% for act in activities %}
+            <div class="card card-lift" style="display: flex; flex-direction: column;">
+                <div style="position: relative; height: 180px; overflow: hidden;">
+                    <img src="{{ act.image_url }}" alt="{{ act.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <span class="badge badge-category" style="position: absolute; top: 12px; left: 12px;">
+                        {{ act.category }}
+                    </span>
+                    <span class="badge badge-cost" style="position: absolute; top: 12px; right: 12px;">
+                        {% if act.estimated_cost == 0 %}Free{% else %}{{ act.estimated_cost|currency }}{% endif %}
+                    </span>
+                </div>
+
+                <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">
+                        <span><i class="fa-solid fa-location-dot"></i> {{ act.city.name }}, {{ act.city.country }}</span>
+                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> {{ act.rating }}</span>
+                    </div>
+
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">{{ act.title }}</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ act.description }}
+                    </p>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 0.75rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="fa-regular fa-clock"></i> ~{{ act.duration_hours }} Hours
+                        </span>
+
+                        {% if current_user.is_authenticated and user_trips %}
+                            <button class="btn btn-primary btn-sm" onclick="openAddActToTripModal({{ act.id }}, '{{ act.title|replace("'", "\\'") }}', {{ act.city_id }})">
+                                <i class="fa-solid fa-plus"></i> Add to Stop
+                            </button>
+                        {% else %}
+                            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-outline btn-sm">
+                                Plan Trip
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-person-hiking" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+            <h3>No activities found matching your filters</h3>
+            <p style="margin-top: 0.5rem;">Try broadening your category, cost, or location search filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Add Activity to User's Trip Stop -->
+<div id="addActToTripModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;">Assign Activity to Trip Stop</h3>
+            <button class="alert-close" onclick="closeModal('addActToTripModal')">&times;</button>
+        </div>
+        <form id="assignActForm" onsubmit="handleAssignActSubmit(event)">
+            <input type="hidden" id="modal_act_id" name="activity_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Activity</label>
+                    <input type="text" id="modal_act_title" class="form-control" readonly style="background: #f8fafc; font-weight: 700;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="target_trip_select">Select Your Trip</label>
+                    <select id="target_trip_select" class="form-control" onchange="loadTripStops(this.value)" required>
+                        <option value="">-- Choose a trip --</option>
+                        {% for t in user_trips %}
+                            <option value="{{ t.id }}">{{ t.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="target_stop_select">Choose Stop Destination</label>
+                    <select id="target_stop_select" name="stop_id" class="form-control" required>
+                        <option value="">-- Select trip first --</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="modal_day_number">Day Number</label>
+                        <input type="number" id="modal_day_number" name="day_number" class="form-control" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="modal_time_slot">Time Slot</label>
+                        <select id="modal_time_slot" name="time_slot" class="form-control">
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Evening">Evening</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addActToTripModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Activity</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddActToTripModal(actId, actTitle, cityId) {
+    document.getElementById('modal_act_id').value = actId;
+    document.getElementById('modal_act_title').value = actTitle;
+    openModal('addActToTripModal');
+}
+
+async function loadTripStops(tripId) {
+    const select = document.getElementById('target_stop_select');
+    select.innerHTML = '<option value="">Loading stops...</option>';
+    if (!tripId) return;
+
+    try {
+        // Fetch trip stops
+        const res = await fetch(`/api/trips/${tripId}/budget-data`);
+        // Or fetch builder page HTML/stops
+        const stopRes = await fetch(`/trips/${tripId}/builder`);
+        const text = await stopRes.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const cards = doc.querySelectorAll('.builder-stop-card');
+
+        select.innerHTML = '';
+        if (cards.length === 0) {
+            select.innerHTML = '<option value="">No stops in this trip yet</option>';
+            return;
+        }
+
+        cards.forEach((card, idx) => {
+            const sId = card.getAttribute('data-stop-id');
+            const name = card.querySelector('h3').textContent.trim();
+            const opt = document.createElement('option');
+            opt.value = sId;
+            opt.textContent = `Stop ${idx + 1}: ${name}`;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error(err);
+        select.innerHTML = '<option value="">Error loading stops</option>';
+    }
+}
+
+async function handleAssignActSubmit(event) {
+    event.preventDefault();
+    const stopId = document.getElementById('target_stop_select').value;
+    const actId = document.getElementById('modal_act_id').value;
+    const day = document.getElementById('modal_day_number').value;
+    const time = document.getElementById('modal_time_slot').value;
+
+    if (!stopId) {
+        showToast('Please select a valid stop destination.', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/stops/${stopId}/activities`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activity_id: actId,
+                day_number: day,
+                time_slot: time
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeModal('addActToTripModal');
+            showToast('Activity successfully added to itinerary stop!', 'success');
+        } else {
+            showToast(data.error || 'Could not add activity', 'danger');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+</script>
+{% endblock %}

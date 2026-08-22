@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 1: Login Screen (Mapped to Wireframe Screen 1) -->
+<div style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 2.5rem 1rem;">
+    <div class="card" style="width: 100%; max-width: 440px; box-shadow: var(--shadow-xl); border-radius: var(--radius-lg);">
+        <div style="text-align: center; padding: 2.5rem 2rem 1.5rem; background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; box-shadow: var(--shadow-sm);">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; margin-bottom: 0.25rem;">Welcome Back</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Sign in to access your personalized travel plans</p>
+        </div>
+
+        <div style="padding: 1.5rem 2rem 2.5rem;">
+            <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="identifier">Email or Username</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="text" id="identifier" name="identifier" class="form-control" placeholder="name@example.com" required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+                        <a href="{{ url_for('auth.forgot_password') }}" style="font-size: 0.85rem;">Forgot password?</a>
+                    </div>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <input type="checkbox" id="remember" name="remember" style="accent-color: var(--primary); width: 16px; height: 16px;">
+                    <label for="remember" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer;">Remember this device</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-size: 1rem;">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Log In
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                    Don't have an account? 
+                    <a href="{{ url_for('auth.signup') }}" style="font-weight: 700;">Create Account</a>
+                </p>
+            </div>
+
+            <!-- Demo Quick Credentials Tip -->
+            <div style="margin-top: 1.25rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px dashed var(--border-light); font-size: 0.8rem; color: var(--text-secondary);">
+                <strong>Demo Credentials:</strong><br>
+                Traveler: <code>traveler@globetrotter.com</code> | <code>travel123</code><br>
+                Admin: <code>admin@globetrotter.com</code> | <code>admin123</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Community Travel Hub — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 10 (Mockup): Community Tab Screen (Wireframe Screen 10) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Hero Banner -->
+    <div class="card" style="padding: 2.5rem 2rem; margin-bottom: 2.5rem; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff; border: none; box-shadow: var(--shadow-lg);">
+        <span class="badge" style="background: rgba(255,255,255,0.15); color: #ffffff; margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-earth-americas"></i> GlobeTrotter Community
+        </span>
+        <h1 style="font-size: 2.3rem; color: #ffffff; margin-bottom: 0.5rem;">Explore Shared Travel Itineraries</h1>
+        <p style="color: #cbd5e1; max-width: 650px; font-size: 1rem; margin-bottom: 1.5rem;">
+            Discover tried-and-tested multi-city plans, realistic budget breakdowns, and authentic travel recommendations published by adventurers worldwide.
+        </p>
+
+        <!-- Search & Filter Bar -->
+        <form action="{{ url_for('community.index') }}" method="GET" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <div class="input-icon-wrapper" style="flex: 2; min-width: 250px;">
+                <i class="fa-solid fa-magnifying-glass input-icon" style="color: #ffffff;"></i>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search itineraries by country, city or keyword..." style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); color: #ffffff;">
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="duration" class="form-control" style="background: #ffffff; color: var(--text-primary);">
+                    <option value="">Any Duration</option>
+                    <option value="1-3" {% if duration_filter == '1-3' %}selected{% endif %}>Weekend (1-3 Days)</option>
+                    <option value="4-7" {% if duration_filter == '4-7' %}selected{% endif %}>1 Week (4-7 Days)</option>
+                    <option value="8+" {% if duration_filter == '8+' %}selected{% endif %}>Extended (8+ Days)</option>
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="budget" class="form-control" style="background: #ffffff; color: var(--text-primary);">
+                    <option value="">Any Budget</option>
+                    <option value="budget" {% if budget_filter == 'budget' %}selected{% endif %}>Budget (&lt; $1,000)</option>
+                    <option value="mid" {% if budget_filter == 'mid' %}selected{% endif %}>Mid-Range ($1k - $3k)</option>
+                    <option value="luxury" {% if budget_filter == 'luxury' %}selected{% endif %}>Luxury (&gt; $3,000)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-compass"></i> Discover
+            </button>
+        </form>
+    </div>
+
+    <!-- Community Trips Grid -->
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Public Community Plans ({{ trips|length }})</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Click on any plan to view stops, breakdown, or copy directly into your account</p>
+        </div>
+    </div>
+
+    {% if trips %}
+        <div class="grid-3">
+            {% for trip in trips %}
+            <div class="card card-lift trip-card">
+                <div class="trip-card-cover">
+                    <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                    <div class="trip-card-badges">
+                        <span class="badge badge-public"><i class="fa-solid fa-globe"></i> Public</span>
+                        <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                    </div>
+                </div>
+
+                <div class="trip-card-body">
+                    <div class="trip-card-meta">
+                        <span><i class="fa-regular fa-calendar"></i> {{ trip.duration_days }} Days</span>
+                        <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} Stops</span>
+                        <span><i class="fa-solid fa-user"></i> {{ trip.user.full_name }}</span>
+                    </div>
+
+                    <h3 class="trip-card-title">{{ trip.title }}</h3>
+                    <p class="trip-card-desc">{{ trip.description or 'A curated multi-city itinerary shared with the community.' }}</p>
+
+                    <!-- Stops Preview -->
+                    {% if trip.stops %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem;">
+                        {% for stop in trip.stops[:3] %}
+                            <span class="badge badge-category" style="font-size: 0.75rem;">
+                                {{ stop.display_city_name }}
+                            </span>
+                        {% endfor %}
+                        {% if trip.stops|length > 3 %}
+                            <span class="badge" style="background: #f1f5f9; color: var(--text-muted); font-size: 0.75rem;">
+                                +{{ trip.stops|length - 3 }} more
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="trip-card-stats">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <button class="btn btn-sm btn-icon btn-like-trip" data-trip-id="{{ trip.id }}" title="Like / Bookmark">
+                                <i class="fa-{% if trip.id in user_liked_ids %}solid fa-heart text-rose{% else %}regular fa-heart{% endif %}"></i>
+                            </button>
+                            <span class="like-count" style="font-weight: 700; font-size: 0.85rem;">{{ trip.likes|length }}</span>
+                        </div>
+
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('community.view_shared', share_slug=trip.share_slug) }}" class="btn btn-outline btn-sm">
+                                View Plan
+                            </a>
+                            {% if current_user.is_authenticated %}
+                            <form action="{{ url_for('trips.clone_trip', trip_id=trip.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-primary btn-sm" title="Copy to My Trips">
+                                    <i class="fa-solid fa-copy"></i> Copy
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-users-rays" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+            <h3>No public itineraries match your search</h3>
+            <p style="margin-top: 0.5rem;">Be the first to publish a public itinerary in this category!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

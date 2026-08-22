@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Trip — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 3: Create Trip Screen (Wireframe Screen 4) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem; max-width: 900px;">
+    <div style="margin-bottom: 2rem;">
+        <span class="badge badge-ongoing" style="margin-bottom: 0.5rem;"><i class="fa-solid fa-plane-departure"></i> New Adventure</span>
+        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">Plan a New Trip</h1>
+        <p style="color: var(--text-secondary);">Set your travel dates, target budget, and trip details to start crafting your day-by-day itinerary.</p>
+    </div>
+
+    <div class="card" style="box-shadow: var(--shadow-lg); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 3rem;">
+        <div style="height: 120px; background: var(--primary-gradient); padding: 1.5rem 2rem; color: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.3rem;">Trip Basic Details</h3>
+                <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">Step 1: Set the foundation for your trip</p>
+            </div>
+            <i class="fa-solid fa-map-location-dot" style="font-size: 2.5rem; opacity: 0.4;"></i>
+        </div>
+
+        <form action="{{ url_for('trips.create_trip') }}" method="POST" enctype="multipart/form-data" style="padding: 2rem;">
+            <!-- Trip Name -->
+            <div class="form-group">
+                <label class="form-label" for="title">Trip Name *</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-suitcase input-icon"></i>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="e.g. European Summer Odyssey, Tokyo & Kyoto Adventure..." required autofocus>
+                </div>
+            </div>
+
+            <!-- Start Date & End Date -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="start_date">Start Date *</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-regular fa-calendar input-icon"></i>
+                        <input type="date" id="start_date" name="start_date" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="end_date">End Date *</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-regular fa-calendar-check input-icon"></i>
+                        <input type="date" id="end_date" name="end_date" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget & Visibility -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="target_budget">Target Budget (USD $)</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-dollar-sign input-icon"></i>
+                        <input type="number" step="10" min="0" id="target_budget" name="target_budget" class="form-control" placeholder="e.g. 2500">
+                    </div>
+                    <span class="form-help">Optional. Used to track expenses against your goal.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="visibility">Trip Visibility</label>
+                    <select id="visibility" name="visibility" class="form-control">
+                        <option value="private" selected>Private (Only you can see)</option>
+                        <option value="public">Public (Visible in Community Hub)</option>
+                        <option value="shared">Shared (Accessible via direct link)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label" for="description">Trip Description & Travel Notes</label>
+                <textarea id="description" name="description" class="form-control" placeholder="What are the goals of this trip? Any special occasions, must-try cuisines, or travel companions?"></textarea>
+            </div>
+
+            <!-- Cover Photo Options -->
+            <div class="form-group">
+                <label class="form-label">Trip Cover Photo</label>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80" checked style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid var(--primary);" class="cover-preset-thumb">
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="preset_image" value="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80" style="display: none;" onchange="updateCoverPreview(this.value)">
+                        <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=200&q=80" style="width: 90px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent;" class="cover-preset-thumb">
+                    </label>
+                </div>
+                
+                <input type="file" name="cover_image_file" class="form-control" accept="image/*">
+                <span class="form-help">Or upload your own custom cover banner image</span>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                <a href="{{ url_for('trips.my_trips') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-arrow-right"></i> Save & Open Builder
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Wireframe Section: Suggestions for Places to Visit / Activities to Perform -->
+    {% if suggested_cities %}
+    <div>
+        <div class="section-header">
+            <div>
+                <h3 style="font-size: 1.3rem;">Popular Starting Destinations</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Inspiration to add as stops to your trip once created</p>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            {% for city in suggested_cities %}
+            <div class="card" style="display: flex; gap: 1rem; padding: 1rem; align-items: center;">
+                <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 70px; height: 70px; border-radius: var(--radius-md); object-fit: cover;">
+                <div style="flex: 1;">
+                    <h4 style="font-size: 1rem; margin-bottom: 0.2rem;">{{ city.name }}</h4>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.4rem;">{{ city.country }}</p>
+                    <span class="badge badge-category" style="font-size: 0.7rem;">{{ city.region }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function updateCoverPreview(val) {
+    document.querySelectorAll('.cover-preset-thumb').forEach(thumb => {
+        if (thumb.parentElement.querySelector('input').value === val) {
+            thumb.style.borderColor = 'var(--primary)';
+        } else {
+            thumb.style.borderColor = 'transparent';
+        }
+    });
+}
+</script>
+{% endblock %}

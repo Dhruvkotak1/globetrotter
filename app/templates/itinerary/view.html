@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ trip.title }} — Itinerary View{% endblock %}
+
+{% block content %}
+<!-- Screen 6: Itinerary View Screen (Wireframe Screen 9) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Hero Banner with Trip Meta -->
+    <div class="card" style="margin-bottom: 2.5rem; overflow: hidden; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div style="position: relative; height: 240px;">
+            <img src="{{ trip.cover_image }}" alt="{{ trip.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem; color: #ffffff;">
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+                    <span class="badge badge-{{ trip.visibility }}">{{ trip.visibility }}</span>
+                </div>
+                <h1 style="font-size: 2.3rem; color: #ffffff; margin-bottom: 0.3rem;">{{ trip.title }}</h1>
+                <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem;">
+                    <i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%B %d, %Y') }} — {{ trip.end_date|date_format('%B %d, %Y') }} ({{ trip.duration_days }} days)
+                    &bull; <i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} Destinations
+                    &bull; <i class="fa-solid fa-user"></i> Planned by {{ trip.user.full_name }}
+                </p>
+            </div>
+        </div>
+
+        <div style="padding: 1.25rem 2rem; background: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; gap: 1.5rem; font-size: 0.95rem;">
+                <div>
+                    <span style="color: var(--text-muted);">Estimated Total:</span>
+                    <strong style="color: var(--primary); font-size: 1.1rem; margin-left: 0.3rem;">{{ trip.total_cost|currency }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Avg / Day:</span>
+                    <strong style="color: var(--accent-emerald); font-size: 1.1rem; margin-left: 0.3rem;">{{ trip.per_day_cost|currency }}</strong>
+                </div>
+            </div>
+
+            <!-- View Modes & Action CTAs -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="{{ url_for('itinerary.trip_calendar', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                    <i class="fa-regular fa-calendar-days"></i> Calendar View
+                </a>
+                <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-chart-pie"></i> Budget Analytics
+                </a>
+                {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                    <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-pen-to-square"></i> Open Builder
+                    </a>
+                {% endif %}
+                <button onclick="openModal('shareTripModal')" class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-share-nodes"></i> Share Trip
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline & Day-Wise Grouped View (Wireframe Screen 9) -->
+    <div style="max-width: 960px; margin: 0 auto;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Day-by-Day Journey Flow</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Physical activities and estimated expenses grouped per day</p>
+            </div>
+            <button onclick="toggleAllDays()" class="btn btn-secondary btn-sm" id="toggleAllBtn">
+                <i class="fa-solid fa-compress"></i> Collapse All Days
+            </button>
+        </div>
+
+        {% if days_data %}
+            <div class="timeline-container">
+                {% for day in days_data %}
+                <div class="timeline-day-block" id="day-block-{{ day.day_number }}">
+                    <div class="timeline-day-node"></div>
+
+                    <div class="day-card">
+                        <!-- Day Header -->
+                        <div class="day-card-header" onclick="toggleDayAccordion({{ day.day_number }})">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span class="badge badge-ongoing" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                                    Day {{ day.day_number }}
+                                </span>
+                                <div>
+                                    <h3 style="font-size: 1.15rem; margin-bottom: 0.1rem;">
+                                        {{ day.date|date_format('%A, %B %d, %Y') }}
+                                    </h3>
+                                    {% if day.active_stops %}
+                                        <span style="font-size: 0.85rem; color: var(--text-muted);">
+                                            <i class="fa-solid fa-location-dot"></i> In 
+                                            {% for st in day.active_stops %}
+                                                <strong>{{ st.display_city_name }}</strong>{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="text-align: right;">
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">Day Estimated Spend:</span>
+                                    <div style="font-weight: 800; color: #059669; font-size: 1.05rem;">
+                                        ${{ "%.2f"|format(day.estimated_expense) }}
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-down day-chevron" id="chevron-{{ day.day_number }}" style="color: var(--text-muted); transition: transform 0.3s ease;"></i>
+                            </div>
+                        </div>
+
+                        <!-- Expandable Day Content Body -->
+                        <div id="day-body-{{ day.day_number }}" class="day-card-body" style="padding: 0;">
+                            <!-- Stop Stays on This Day -->
+                            {% if day.active_stops %}
+                                {% for st in day.active_stops %}
+                                    {% if st.arrival_date == day.date %}
+                                    <div style="padding: 0.85rem 1.5rem; background: #eef2ff; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                                        <div style="color: var(--primary);">
+                                            <i class="fa-solid fa-plane-arrival"></i> <strong>Arrive in {{ st.display_city_name }}</strong> via {{ st.transport_mode }}
+                                            {% if st.accommodation_name %}&bull; Check into {{ st.accommodation_name }}{% endif %}
+                                        </div>
+                                        <span style="font-weight: 700; color: var(--primary);">
+                                            +${{ "%.2f"|format(st.transport_cost) }} Transport
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            <!-- Physical Activities List -->
+                            {% if day.activities %}
+                                {% for item in day.activities %}
+                                {% set act = item.activity %}
+                                <div class="day-activity-item">
+                                    <img src="{{ act.display_image }}" alt="{{ act.display_title }}" class="activity-thumb">
+                                    
+                                    <div class="activity-info">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                                            <div>
+                                                <h4 class="activity-title">{{ act.display_title }}</h4>
+                                                <div class="activity-meta">
+                                                    <span><i class="fa-regular fa-clock"></i> {{ act.time_slot }}</span>
+                                                    <span><i class="fa-solid fa-tag"></i> {{ act.category }}</span>
+                                                    <span><i class="fa-solid fa-location-dot"></i> {{ item.stop.display_city_name }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="activity-cost-badge">
+                                                {{ act.cost|currency }}
+                                            </div>
+                                        </div>
+
+                                        {% if act.display_description %}
+                                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.3rem;">
+                                                {{ act.display_description }}
+                                            </p>
+                                        {% endif %}
+
+                                        {% if act.notes %}
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">
+                                                <i class="fa-regular fa-note-sticky"></i> {{ act.notes }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                                    <i class="fa-solid fa-mug-hot" style="font-size: 1.5rem; margin-bottom: 0.4rem; color: var(--accent-amber);"></i>
+                                    <p>Free Leisure & Exploration Day. No scheduled activities booked.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 3rem; text-align: center;">
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">No stops or dates defined for this trip yet.</p>
+                <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary">Open Builder to Add Stops</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Share Trip -->
+<div id="shareTripModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;"><i class="fa-solid fa-share-nodes"></i> Share This Itinerary</h3>
+            <button class="alert-close" onclick="closeModal('shareTripModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                Anyone with this public link can view this itinerary, budget summary, and copy it to their account:
+            </p>
+            
+            <div class="input-icon-wrapper" style="margin-bottom: 1.5rem;">
+                <input type="text" id="shareUrlInput" class="form-control" value="{{ url_for('community.view_shared', share_slug=trip.share_slug, _external=True) }}" readonly>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
+                <button class="btn btn-primary" onclick="copyToClipboard(document.getElementById('shareUrlInput').value, 'Share link copied to clipboard!')">
+                    <i class="fa-solid fa-copy"></i> Copy Link
+                </button>
+                <a href="https://twitter.com/intent/tweet?text={{ trip.title }} on GlobeTrotter&url={{ url_for('community.view_shared', share_slug=trip.share_slug, _external=True) }}" target="_blank" class="btn btn-secondary">
+                    <i class="fa-brands fa-x-twitter"></i> Tweet
+                </a>
+                <a href="https://api.whatsapp.com/send?text={{ trip.title }} {{ url_for('community.view_shared', share_slug=trip.share_slug, _external=True) }}" target="_blank" class="btn btn-secondary">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+
+            {% if current_user.is_authenticated and current_user.id == trip.user_id %}
+            <form action="{{ url_for('trips.toggle_visibility', trip_id=trip.id) }}" method="POST" style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                <label class="form-label">Visibility Setting</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select name="visibility" class="form-control">
+                        <option value="public" {% if trip.visibility == 'public' %}selected{% endif %}>Public (Listed in Community)</option>
+                        <option value="shared" {% if trip.visibility == 'shared' %}selected{% endif %}>Shared (Link only)</option>
+                        <option value="private" {% if trip.visibility == 'private' %}selected{% endif %}>Private (Only you)</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary">Update</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('shareTripModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let allExpanded = true;
+
+function toggleDayAccordion(dayNumber) {
+    const body = document.getElementById(`day-body-${dayNumber}`);
+    const chevron = document.getElementById(`chevron-${dayNumber}`);
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        chevron.style.transform = 'rotate(0deg)';
+    } else {
+        body.style.display = 'none';
+        chevron.style.transform = 'rotate(-90deg)';
+    }
+}
+
+function toggleAllDays() {
+    allExpanded = !allExpanded;
+    const btn = document.getElementById('toggleAllBtn');
+    
+    document.querySelectorAll('[id^="day-body-"]').forEach(body => {
+        body.style.display = allExpanded ? 'block' : 'none';
+    });
+    document.querySelectorAll('.day-chevron').forEach(chev => {
+        chev.style.transform = allExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+    });
+
+    if (allExpanded) {
+        btn.innerHTML = '<i class="fa-solid fa-compress"></i> Collapse All Days';
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-expand"></i> Expand All Days';
+    }
+}
+</script>
+{% endblock %}

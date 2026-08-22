@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}GlobeTrotter — Empowering Personalized Travel Planning{% endblock %}
+
+{% block content %}
+<!-- Screen 2: Dashboard / Home Screen -->
+<section class="hero-section">
+    <div class="container" style="display: flex; flex-direction: column; align-items: center;">
+        <span class="badge badge-ongoing" style="margin-bottom: 1.25rem;">
+            <i class="fa-solid fa-sparkles"></i> The Next-Gen Travel Planner
+        </span>
+        <h1 class="hero-title">
+            Dream, Design, & Organize <br>
+            <span class="hero-gradient-text">Your Perfect Journey</span>
+        </h1>
+        <p class="hero-subtitle">
+            Plan multi-city itineraries, organize activities, track estimated budgets in real-time, and share travel plans with an inspiring community.
+        </p>
+
+        <!-- Search Bar -->
+        <form action="{{ url_for('itinerary.city_search') }}" method="GET" class="search-bar-hero" style="margin-bottom: 2rem;">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 0.75rem;"></i>
+            <input type="text" name="q" placeholder="Where do you want to explore? (e.g. Tokyo, Paris, Bali, Rome...)">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-plus-circle"></i> Plan a New Trip
+            </a>
+            <a href="{{ url_for('community.index') }}" class="btn btn-secondary btn-lg">
+                <i class="fa-solid fa-compass"></i> Browse Community Itineraries
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- If Logged In: User's Recent Trips Highlights -->
+{% if current_user.is_authenticated and current_user.trips.count() > 0 %}
+<section style="padding: 3rem 0; background: #ffffff; border-bottom: 1px solid var(--border-light);">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Your Recent Trips</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Pick up where you left off</p>
+            </div>
+            <a href="{{ url_for('trips.my_trips') }}" class="btn btn-secondary btn-sm">
+                View All My Trips ({{ current_user.trips.count() }}) <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="grid-3">
+            {% for trip in current_user.trips.limit(3) %}
+            <div class="card card-lift trip-card">
+                <div class="trip-card-cover">
+                    <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                    <div class="trip-card-badges">
+                        <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+                        <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                    </div>
+                </div>
+                <div class="trip-card-body">
+                    <div class="trip-card-meta">
+                        <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
+                        <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
+                    </div>
+                    <h3 class="trip-card-title">{{ trip.title }}</h3>
+                    <p class="trip-card-desc">{{ trip.description or 'Personalized travel plan created with GlobeTrotter.' }}</p>
+                    <div class="trip-card-stats">
+                        <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">View Timeline</a>
+                        <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm">Edit Builder</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Top Regional Selections / Recommended Cities -->
+<section style="padding: 3.5rem 0;">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Top Regional Selections & Popular Cities</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Curated global destinations with cost estimates and local activities</p>
+            </div>
+            <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">
+                Explore All Destinations <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="grid-4">
+            {% for city in popular_cities %}
+            <div class="card card-lift" style="display: flex; flex-direction: column;">
+                <div style="position: relative; height: 160px; overflow: hidden;">
+                    <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <span class="badge badge-cost" style="position: absolute; top: 10px; right: 10px;">
+                        Cost: ${{ "%.0f"|format(city.cost_index * 45) }}/day
+                    </span>
+                    <span class="badge badge-category" style="position: absolute; bottom: 10px; left: 10px;">
+                        {{ city.region }}
+                    </span>
+                </div>
+                <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">{{ city.name }}</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">
+                        <i class="fa-solid fa-location-dot"></i> {{ city.country }}
+                    </p>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ city.description }}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 0.75rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-clock"></i> Rec: {{ city.recommended_days }} days
+                        </span>
+                        <a href="{{ url_for('itinerary.activity_search', city_id=city.id) }}" class="btn btn-outline btn-sm">
+                            Activities
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Budget & Features Highlights Banner -->
+<section style="padding: 3.5rem 0; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); color: #ffffff;">
+    <div class="container">
+        <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
+            <h2 style="font-size: 2.2rem; color: #ffffff; margin-bottom: 0.75rem;">Engineered for Effortless Travel Planning</h2>
+            <p style="color: #cbd5e1; font-size: 1rem;">Experience the complete suite of tools designed to keep your itinerary organized and within budget.</p>
+        </div>
+
+        <div class="grid-3">
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(79, 70, 229, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #818cf8; margin-bottom: 1.25rem;">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Multi-City Itinerary Builder</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem;">Add stops, organize arrival and departure dates, and dynamically reorder cities with immediate timeline updates.</p>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #22d3ee; margin-bottom: 1.25rem;">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Automated Budget Breakdown</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem;">Instant cost breakdowns across transport, stay, activities, and dining with interactive charts and overbudget alerts.</p>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #34d399; margin-bottom: 1.25rem;">
+                    <i class="fa-solid fa-users-rays"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem;">Community Hub & One-Click Copy</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem;">Discover verified travel itineraries published by fellow travelers and clone them directly into your personal dashboard.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Community Itineraries -->
+{% if featured_trips %}
+<section style="padding: 3.5rem 0;">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Trending Community Itineraries</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Get inspired by itineraries planned by travelers worldwide</p>
+            </div>
+            <a href="{{ url_for('community.index') }}" class="btn btn-secondary btn-sm">
+                Explore Community Hub <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="grid-3">
+            {% for trip in featured_trips %}
+            <div class="card card-lift trip-card">
+                <div class="trip-card-cover">
+                    <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                    <div class="trip-card-badges">
+                        <span class="badge badge-public"><i class="fa-solid fa-globe"></i> Public</span>
+                        <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                    </div>
+                </div>
+                <div class="trip-card-body">
+                    <div class="trip-card-meta">
+                        <span><i class="fa-regular fa-clock"></i> {{ trip.duration_days }} days</span>
+                        <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} cities</span>
+                        <span><i class="fa-regular fa-heart"></i> {{ trip.likes|length }}</span>
+                    </div>
+                    <h3 class="trip-card-title">{{ trip.title }}</h3>
+                    <p class="trip-card-desc">{{ trip.description or 'A curated multi-city itinerary available for travelers.' }}</p>
+                    <div class="trip-card-stats">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">
+                            By <strong>{{ trip.user.full_name }}</strong>
+                        </span>
+                        <a href="{{ url_for('community.view_shared', share_slug=trip.share_slug) }}" class="btn btn-outline btn-sm">
+                            View Plan
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

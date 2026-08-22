@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore Cities & Destinations — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 7: City Search Screen (Wireframe Screen 8) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <div class="section-header">
+        <div>
+            <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Global City Directory</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Search and discover destinations to add to your personalized multi-city itineraries</p>
+        </div>
+    </div>
+
+    <!-- Search & Filter Form (Wireframe Screen 8 Header) -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: var(--shadow-sm);">
+        <form action="{{ url_for('itinerary.city_search') }}" method="GET" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <div class="input-icon-wrapper" style="flex: 2; min-width: 260px;">
+                    <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by city or country name...">
+                </div>
+
+                <div style="flex: 1; min-width: 160px;">
+                    <select name="region" class="form-control">
+                        <option value="all">All Regions</option>
+                        {% for reg in regions %}
+                            <option value="{{ reg }}" {% if selected_region == reg %}selected{% endif %}>{{ reg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 160px;">
+                    <select name="cost" class="form-control">
+                        <option value="">Any Cost Index</option>
+                        <option value="2.0" {% if selected_cost == '2.0' %}selected{% endif %}>Budget ($)</option>
+                        <option value="3.5" {% if selected_cost == '3.5' %}selected{% endif %}>Moderate ($$)</option>
+                        <option value="5.0" {% if selected_cost == '5.0' %}selected{% endif %}>Luxury ($$$)</option>
+                    </select>
+                </div>
+
+                <div style="flex: 1; min-width: 160px;">
+                    <select name="sort" class="form-control">
+                        <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Most Popular</option>
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                        <option value="cost_asc" {% if sort_by == 'cost_asc' %}selected{% endif %}>Cost: Low to High</option>
+                        <option value="cost_desc" {% if sort_by == 'cost_desc' %}selected{% endif %}>Cost: High to Low</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.5rem;">
+                    <i class="fa-solid fa-filter"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Cities List (Wireframe Screen 8 Option items) -->
+    {% if cities %}
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            {% for city in cities %}
+            <div class="card card-lift" style="display: flex; flex-direction: row; flex-wrap: wrap; overflow: hidden; align-items: center;">
+                <div style="width: 260px; height: 180px; flex-shrink: 0; position: relative;">
+                    <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <span class="badge badge-category" style="position: absolute; top: 10px; left: 10px;">{{ city.region }}</span>
+                </div>
+
+                <div style="flex: 1; min-width: 280px; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+                        <div>
+                            <h3 style="font-size: 1.35rem; margin-bottom: 0.2rem;">{{ city.name }}</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i class="fa-solid fa-location-dot"></i> {{ city.country }}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-cost">
+                                Cost Index: {{ city.cost_index }} / 5.0
+                            </span>
+                            <span class="badge" style="background: #eef2ff; color: var(--primary);">
+                                <i class="fa-solid fa-fire"></i> {{ city.popularity }}% Pop.
+                            </span>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5;">
+                        {{ city.description }}
+                    </p>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-calendar-check"></i> Recommended Stay: <strong>{{ city.recommended_days }} Days</strong>
+                        </span>
+
+                        <div style="display: flex; gap: 0.5rem;">
+                            {% if current_user.is_authenticated %}
+                                <button class="btn btn-secondary btn-sm btn-save-destination" data-city-id="{{ city.id }}">
+                                    <i class="fa-regular fa-heart"></i> Save
+                                </button>
+                                {% if user_trips %}
+                                    <button class="btn btn-primary btn-sm" onclick="openAddToTripModal({{ city.id }}, '{{ city.name }}')">
+                                        <i class="fa-solid fa-plus"></i> Add to Trip
+                                    </button>
+                                {% else %}
+                                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-plus"></i> Start Trip Here
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus"></i> Add to Trip
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('itinerary.activity_search', city_id=city.id) }}" class="btn btn-outline btn-sm">
+                                Explore Activities ({{ city.activities.count() }}) <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-earth-americas" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+            <h3>No destinations match your criteria</h3>
+            <p style="margin-top: 0.5rem;">Try relaxing your search terms or filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Quick Add Destination to Active Trip -->
+<div id="addToTripModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;">Add Destination to Existing Trip</h3>
+            <button class="alert-close" onclick="closeModal('addToTripModal')">&times;</button>
+        </div>
+        <form id="quickAddCityForm" onsubmit="handleQuickAddCitySubmit(event)">
+            <input type="hidden" id="modal_city_id" name="city_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="selected_trip_id">Select Destination City</label>
+                    <input type="text" id="modal_city_name" class="form-control" readonly style="background: #f8fafc; font-weight: 700;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="selected_trip_id">Choose Your Trip</label>
+                    <select id="selected_trip_id" name="trip_id" class="form-control" required>
+                        {% for t in user_trips %}
+                            <option value="{{ t.id }}">{{ t.title }} ({{ t.start_date|date_format('%b %d') }} - {{ t.end_date|date_format('%b %d') }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="quick_arrival">Arrival Date</label>
+                        <input type="date" id="quick_arrival" name="arrival_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quick_departure">Departure Date</label>
+                        <input type="date" id="quick_departure" name="departure_date" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addToTripModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Stop to Selected Trip</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddToTripModal(cityId, cityName) {
+    document.getElementById('modal_city_id').value = cityId;
+    document.getElementById('modal_city_name').value = cityName;
+    
+    // Set default dates to today + 7
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('quick_arrival').value = today;
+    document.getElementById('quick_departure').value = today;
+    
+    openModal('addToTripModal');
+}
+
+async function handleQuickAddCitySubmit(event) {
+    event.preventDefault();
+    const tripId = document.getElementById('selected_trip_id').value;
+    const cityId = document.getElementById('modal_city_id').value;
+    const arr = document.getElementById('quick_arrival').value;
+    const dep = document.getElementById('quick_departure').value;
+
+    try {
+        const res = await fetch(`/api/trips/${tripId}/stops`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                city_id: cityId,
+                arrival_date: arr,
+                departure_date: dep,
+                transport_mode: 'Flight'
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeModal('addToTripModal');
+            showToast(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = `/trips/${tripId}/builder`;
+            }, 1000);
+        } else {
+            showToast(data.error || 'Failed to add', 'danger');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+</script>
+{% endblock %}

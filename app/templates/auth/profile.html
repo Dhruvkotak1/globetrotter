@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.full_name }} — Profile & Settings{% endblock %}
+
+{% block content %}
+<!-- Screen 12: User Profile / Settings Screen (Wireframe Screen 7) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Profile Header Card -->
+    <div class="card" style="margin-bottom: 2.5rem; overflow: visible;">
+        <div style="height: 140px; background: var(--primary-gradient); border-radius: var(--radius-lg) var(--radius-lg) 0 0; position: relative;"></div>
+        <div style="padding: 0 2rem 2rem; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; margin-top: -50px; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: flex-end; gap: 1.5rem;">
+                    <div style="position: relative;">
+                        {% if user.avatar and user.avatar != 'default_avatar.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-md);">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: var(--shadow-md);">
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">{{ user.full_name }}</h1>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">
+                            <i class="fa-solid fa-at"></i> {{ user.username }} &bull; 
+                            <i class="fa-solid fa-location-dot"></i> {{ user.city or 'Earth' }}{% if user.country %}, {{ user.country }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem;">
+                    <button onclick="openModal('editProfileModal')" class="btn btn-primary">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit Profile & Settings
+                    </button>
+                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-secondary">
+                        <i class="fa-solid fa-plus"></i> Plan Trip
+                    </a>
+                </div>
+            </div>
+
+            {% if user.bio %}
+                <div style="background: #f8fafc; padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">{{ user.bio }}</p>
+                </div>
+            {% endif %}
+
+            <div style="display: flex; gap: 2rem; border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
+                <div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">{{ user.trips.count() }}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Total Trips</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-emerald);">{{ preplanned_trips|length }}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Preplanned Trips</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan);">{{ previous_trips|length }}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Past Journeys</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent-rose);">{{ saved_destinations|length }}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Saved Places</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Preplanned Trips (Ongoing / Upcoming) -->
+    <div style="margin-bottom: 3rem;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Preplanned Trips</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Upcoming and currently ongoing adventures</p>
+            </div>
+        </div>
+
+        {% if preplanned_trips %}
+            <div class="grid-3">
+                {% for trip in preplanned_trips %}
+                <div class="card card-lift trip-card">
+                    <div class="trip-card-cover">
+                        <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                        <div class="trip-card-badges">
+                            <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+                            <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                        </div>
+                    </div>
+                    <div class="trip-card-body">
+                        <div class="trip-card-meta">
+                            <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
+                            <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
+                        </div>
+                        <h3 class="trip-card-title">{{ trip.title }}</h3>
+                        <p class="trip-card-desc">{{ trip.description or 'Preplanned custom itinerary.' }}</p>
+                        <div class="trip-card-stats">
+                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">View Timeline</a>
+                            <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-map-location-dot" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--primary);"></i>
+                <p>No preplanned trips yet.</p>
+                <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Plan a New Trip</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Section 2: Previous Trips (Completed) -->
+    <div style="margin-bottom: 3rem;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Previous Trips</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Memories from your completed journeys</p>
+            </div>
+        </div>
+
+        {% if previous_trips %}
+            <div class="grid-3">
+                {% for trip in previous_trips %}
+                <div class="card card-lift trip-card">
+                    <div class="trip-card-cover">
+                        <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                        <div class="trip-card-badges">
+                            <span class="badge badge-completed">Completed</span>
+                            <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                        </div>
+                    </div>
+                    <div class="trip-card-body">
+                        <div class="trip-card-meta">
+                            <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
+                            <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
+                        </div>
+                        <h3 class="trip-card-title">{{ trip.title }}</h3>
+                        <p class="trip-card-desc">{{ trip.description }}</p>
+                        <div class="trip-card-stats">
+                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">View Timeline</a>
+                            <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-outline btn-sm">Budget</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-passport" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--text-muted);"></i>
+                <p>No completed past trips recorded.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Section 3: Saved Destinations Wishlist -->
+    <div style="margin-bottom: 3rem;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Saved Destinations</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Places on your travel radar</p>
+            </div>
+            <a href="{{ url_for('itinerary.city_search') }}" class="btn btn-secondary btn-sm">Discover More</a>
+        </div>
+
+        {% if saved_destinations %}
+            <div class="grid-4">
+                {% for city in saved_destinations %}
+                <div class="card card-lift">
+                    <div style="height: 140px; overflow: hidden; position: relative;">
+                        <img src="{{ city.image_url }}" alt="{{ city.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span class="badge badge-category" style="position: absolute; top: 10px; left: 10px;">{{ city.region }}</span>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <h4 style="font-size: 1.05rem; margin-bottom: 0.2rem;">{{ city.name }}</h4>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.75rem;">{{ city.country }}</p>
+                        <a href="{{ url_for('itinerary.activity_search', city_id=city.id) }}" class="btn btn-outline btn-sm" style="width: 100%;">
+                            View Activities
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
+                <i class="fa-regular fa-bookmark" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p>You haven't saved any cities to your wishlist yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Edit Profile & Settings -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;">Edit Profile & Account Settings</h3>
+            <button class="alert-close" onclick="closeModal('editProfileModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('auth.profile') }}" method="POST" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_first_name">First Name</label>
+                        <input type="text" id="edit_first_name" name="first_name" class="form-control" value="{{ user.first_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_last_name">Last Name</label>
+                        <input type="text" id="edit_last_name" name="last_name" class="form-control" value="{{ user.last_name }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit_email">Email Address</label>
+                    <input type="email" id="edit_email" name="email" class="form-control" value="{{ user.email }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_city">City</label>
+                        <input type="text" id="edit_city" name="city" class="form-control" value="{{ user.city }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_country">Country</label>
+                        <input type="text" id="edit_country" name="country" class="form-control" value="{{ user.country }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit_phone">Phone Number</label>
+                    <input type="text" id="edit_phone" name="phone" class="form-control" value="{{ user.phone }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit_bio">Bio / Travel Philosophy</label>
+                    <textarea id="edit_bio" name="bio" class="form-control">{{ user.bio }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit_avatar">Change Profile Picture</label>
+                    <input type="file" id="edit_avatar" name="avatar" class="form-control" accept="image/*">
+                </div>
+
+                <div class="form-group" style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                    <label class="form-label" for="edit_password">Change Password (Leave blank to keep current)</label>
+                    <input type="password" id="edit_password" name="new_password" class="form-control" placeholder="New password">
+                </div>
+
+                <!-- Danger Zone: Delete Account -->
+                <div style="border-top: 1px solid #fee2e2; margin-top: 1.5rem; padding-top: 1rem;">
+                    <h4 style="color: var(--accent-rose); font-size: 0.95rem; margin-bottom: 0.5rem;">Delete Account</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Type "DELETE" below to permanently delete your account and all itineraries.</p>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" name="confirm_delete" class="form-control" placeholder='Type "DELETE"' style="border-color: #fecdd3;">
+                        <button type="submit" formaction="{{ url_for('auth.delete_account') }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you completely sure?')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

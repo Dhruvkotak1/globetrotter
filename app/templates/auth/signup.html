@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 2: Registration Screen (Mapped to Wireframe Screen 2) -->
+<div style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 3rem 1rem;">
+    <div class="card" style="width: 100%; max-width: 620px; box-shadow: var(--shadow-xl); border-radius: var(--radius-lg);">
+        <div style="text-align: center; padding: 2.5rem 2rem 1.5rem; background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2.2rem; box-shadow: var(--shadow-sm);">
+                <i class="fa-solid fa-camera"></i>
+            </div>
+            <h2 style="font-size: 1.7rem; margin-bottom: 0.25rem;">Create Your Traveler Account</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Join thousands of globetrotters designing smart itineraries</p>
+        </div>
+
+        <div style="padding: 1.5rem 2.5rem 2.5rem;">
+            <form action="{{ url_for('auth.signup') }}" method="POST" enctype="multipart/form-data">
+                <!-- Name Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control" placeholder="e.g. Alex" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" placeholder="e.g. Morgan" required>
+                    </div>
+                </div>
+
+                <!-- Username & Email -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-at input-icon"></i>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="traveler_alex" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="alex@example.com" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Min 6 chars" required minlength="6">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirm_password">Confirm Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password" required minlength="6">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location & Phone -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="city">City</label>
+                        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. San Francisco">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="country">Country</label>
+                        <input type="text" id="country" name="country" class="form-control" placeholder="e.g. United States">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="text" id="phone" name="phone" class="form-control" placeholder="+1 (555) 000-0000">
+                    </div>
+                </div>
+
+                <!-- Profile Photo -->
+                <div class="form-group">
+                    <label class="form-label" for="avatar">Profile Photo (Optional)</label>
+                    <input type="file" id="avatar" name="avatar" class="form-control" accept="image/*">
+                    <p class="form-help">Supported formats: JPG, PNG, WEBP (Max 16MB)</p>
+                </div>
+
+                <!-- Bio / Additional Information -->
+                <div class="form-group">
+                    <label class="form-label" for="bio">Additional Information / Bio</label>
+                    <textarea id="bio" name="bio" class="form-control" placeholder="Tell us about your favorite travel styles, dream destinations, or travel bucket list..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+                    <i class="fa-solid fa-user-plus"></i> Register Users
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                    Already have an account? 
+                    <a href="{{ url_for('auth.login') }}" style="font-weight: 700;">Log In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

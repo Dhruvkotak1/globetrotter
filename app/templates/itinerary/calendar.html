@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendar View — {{ trip.title }}{% endblock %}
+
+{% block content %}
+<!-- Screen 10: Trip Calendar / Timeline Screen (Wireframe Screen 11) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem; max-width: 1050px;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h1 style="font-size: 2.2rem;">Trip Visual Calendar</h1>
+                <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Visual timeline mapping for <strong>{{ trip.title }}</strong> ({{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }})
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-list-check"></i> Day-by-Day Timeline
+            </a>
+            <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-chart-pie"></i> Budget
+            </a>
+            {% if current_user.is_authenticated and (current_user.id == trip.user_id or current_user.is_admin) %}
+                <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-pen"></i> Builder
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Calendar Container (Wireframe Screen 11) -->
+    <div class="calendar-wrapper">
+        <div class="calendar-header">
+            <button id="cal-prev-month" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-chevron-left"></i> Previous Month
+            </button>
+            <h2 id="cal-month-title" style="font-size: 1.4rem; color: var(--primary);">Month Year</h2>
+            <button id="cal-next-month" class="btn btn-secondary btn-sm">
+                Next Month <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Days of Week Header -->
+        <div class="calendar-grid" style="margin-bottom: 0.5rem;">
+            <div class="calendar-day-head">Sun</div>
+            <div class="calendar-day-head">Mon</div>
+            <div class="calendar-day-head">Tue</div>
+            <div class="calendar-day-head">Wed</div>
+            <div class="calendar-day-head">Thu</div>
+            <div class="calendar-day-head">Fri</div>
+            <div class="calendar-day-head">Sat</div>
+        </div>
+
+        <!-- Dynamic Days Grid -->
+        <div id="cal-days-grid" class="calendar-grid">
+            <!-- Rendered by calendar_view.js -->
+        </div>
+    </div>
+
+    <!-- Calendar Legend -->
+    <div style="margin-top: 1.5rem; display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 14px; height: 14px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 3px;"></div>
+            <span>Trip Active Dates</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 14px; height: 14px; background: var(--primary); border-radius: 3px;"></div>
+            <span>City Destination Stop</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 14px; height: 14px; background: var(--accent-cyan); border-radius: 3px;"></div>
+            <span>Activity / Excursion</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/calendar_view.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tripStart = "{{ trip.start_date.isoformat() }}";
+        const tripEnd = "{{ trip.end_date.isoformat() }}";
+        const stopsData = {{ trip.stops|map(attribute='to_dict')|list|tojson }};
+        
+        initTripCalendar(tripStart, tripEnd, stopsData);
+    });
+</script>
+{% endblock %}

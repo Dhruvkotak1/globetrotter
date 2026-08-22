@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Analytics Dashboard — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 13: Admin / Analytics Dashboard (Wireframe Screen 12) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <!-- Top Header -->
+    <div class="section-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h1 style="font-size: 2.2rem;">Platform Analytics & Administration</h1>
+                <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">Admin Role</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Monitor platform adoption, trip planning metrics, top global destinations, and user engagement
+            </p>
+        </div>
+    </div>
+
+    <!-- Metric Stat Cards (Wireframe Screen 12 Top Cards) -->
+    <div class="budget-summary-grid" style="margin-bottom: 2.5rem;">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #eef2ff; color: var(--primary);">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--primary);">{{ total_users }}</div>
+                <div class="stat-label">Registered Travelers</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                <i class="fa-solid fa-suitcase-rolling"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: #2563eb;">{{ total_trips }}</div>
+                <div class="stat-label">Total Itineraries Created</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #ecfdf5; color: #059669;">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: #059669;">{{ total_platform_budget|currency }}</div>
+                <div class="stat-label">Total Travel Budget Planned</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fffbeb; color: #d97706;">
+                <i class="fa-solid fa-earth-americas"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: #d97706;">{{ total_cities }}</div>
+                <div class="stat-label">Global Cities in Catalog</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts (Wireframe Screen 12 Visual Charts) -->
+    <div class="grid-2" style="margin-bottom: 3rem;">
+        <!-- Trip Creation Growth Trend Chart -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Trip Creation Over Time
+            </h3>
+            <div style="height: 260px; position: relative;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Destinations Visited Chart -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-chart-bar" style="color: var(--accent-cyan);"></i> Top Destination Cities
+            </h3>
+            <div style="height: 260px; position: relative;">
+                <canvas id="topDestChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Table -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.3rem;"><i class="fa-solid fa-user-gear"></i> User Management</h3>
+            <span class="badge" style="background: #f1f5f9; color: var(--text-secondary);">{{ users|length }} Users</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-light); text-align: left; color: var(--text-muted);">
+                        <th style="padding: 0.75rem 1rem;">User</th>
+                        <th style="padding: 0.75rem 1rem;">Email</th>
+                        <th style="padding: 0.75rem 1rem;">Location</th>
+                        <th style="padding: 0.75rem 1rem;">Trips</th>
+                        <th style="padding: 0.75rem 1rem;">Role</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 0.85rem 1rem; font-weight: 700;">
+                            {{ u.full_name }} <br>
+                            <small style="font-weight: normal; color: var(--text-muted);">@{{ u.username }}</small>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ u.email }}</td>
+                        <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                            {{ u.city or '—' }}{% if u.country %}, {{ u.country }}{% endif %}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--primary);">
+                            {{ u.trips.count() }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            {% if u.is_admin %}
+                                <span class="badge" style="background: #fef2f2; color: #dc2626;">Admin</span>
+                            {% else %}
+                                <span class="badge" style="background: #f1f5f9; color: #64748b;">Member</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: right;">
+                            {% if u.id != current_user.id %}
+                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                                <form action="{{ url_for('admin.toggle_admin', user_id=u.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Toggle Role">
+                                        {% if u.is_admin %}Revoke Admin{% else %}Make Admin{% endif %}
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin.delete_user', user_id=u.id) }}" method="POST" onsubmit="return confirm('Delete user {{ u.username }} and all their data?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3; padding: 0.25rem 0.5rem;" title="Delete User">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">(You)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Trips Moderation Table -->
+    <div class="card" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.3rem;"><i class="fa-solid fa-shield-halved"></i> Trip Moderation & Overview</h3>
+            <span class="badge" style="background: #f1f5f9; color: var(--text-secondary);">Recent 10</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-light); text-align: left; color: var(--text-muted);">
+                        <th style="padding: 0.75rem 1rem;">Trip Title</th>
+                        <th style="padding: 0.75rem 1rem;">Owner</th>
+                        <th style="padding: 0.75rem 1rem;">Dates</th>
+                        <th style="padding: 0.75rem 1rem;">Stops</th>
+                        <th style="padding: 0.75rem 1rem;">Est. Budget</th>
+                        <th style="padding: 0.75rem 1rem;">Visibility</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in recent_trips %}
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 0.85rem 1rem; font-weight: 700;">
+                            <a href="{{ url_for('itinerary.view_itinerary', trip_id=t.id) }}">{{ t.title }}</a>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ t.user.username }}</td>
+                        <td style="padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                            {{ t.start_date|date_format('%b %d') }} - {{ t.end_date|date_format('%b %d, %Y') }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">{{ t.stops|length }}</td>
+                        <td style="padding: 0.85rem 1rem; font-weight: 700; color: #059669;">
+                            {{ t.total_cost|currency }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            <span class="badge badge-{{ t.visibility }}">{{ t.visibility }}</span>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: right;">
+                            <form action="{{ url_for('admin.delete_trip', trip_id=t.id) }}" method="POST" onsubmit="return confirm('Delete this trip?');" style="display: inline;">
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3; padding: 0.25rem 0.5rem;" title="Delete Trip">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Trip Creation Line Trend Chart
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: {{ trend_labels|tojson }},
+                datasets: [{
+                    label: 'Trips Created',
+                    data: {{ trend_data|tojson }},
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: '#4f46e5',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // 2. Top Destinations Bar Chart
+    const topCtx = document.getElementById('topDestChart');
+    if (topCtx) {
+        new Chart(topCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ city_chart_labels|tojson }},
+                datasets: [{
+                    label: 'Visits in Itineraries',
+                    data: {{ city_chart_counts|tojson }},
+                    backgroundColor: [
+                        '#06b6d4',
+                        '#4f46e5',
+                        '#10b981',
+                        '#f59e0b',
+                        '#8b5cf6'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

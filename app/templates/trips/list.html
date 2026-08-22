@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}My Trips — GlobeTrotter{% endblock %}
+
+{% block content %}
+<!-- Screen 4: My Trips (Trip List) Screen (Wireframe Screen 6) -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+    <div class="section-header">
+        <div>
+            <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">My Travel Itineraries</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Manage and track all your scheduled vacations and getaways</p>
+        </div>
+        <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Plan a New Trip
+        </a>
+    </div>
+
+    <!-- Search, Filter & Sort Toolbar (Mapped to Wireframe Screen 6 header) -->
+    <div class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+        <!-- Search Input -->
+        <form action="{{ url_for('trips.my_trips') }}" method="GET" style="display: flex; gap: 0.75rem; flex: 1; min-width: 260px;">
+            <div class="input-icon-wrapper" style="flex: 1;">
+                <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by trip name or keywords...">
+            </div>
+            <button type="submit" class="btn btn-secondary">Search</button>
+            {% if search_query %}
+                <a href="{{ url_for('trips.my_trips') }}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </form>
+
+        <!-- Group by Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" onclick="filterTab('all', this)">All ({{ all_trips|length }})</button>
+            <button class="tab-btn" onclick="filterTab('ongoing', this)">Ongoing ({{ ongoing_trips|length }})</button>
+            <button class="tab-btn" onclick="filterTab('upcoming', this)">Upcoming ({{ upcoming_trips|length }})</button>
+            <button class="tab-btn" onclick="filterTab('completed', this)">Completed ({{ completed_trips|length }})</button>
+        </div>
+    </div>
+
+    <!-- Trips Grid Container -->
+    {% if all_trips %}
+        <div id="trips-grid" class="grid-3">
+            {% for trip in all_trips %}
+            <div class="card card-lift trip-card trip-item" data-status="{{ trip.status }}">
+                <div class="trip-card-cover">
+                    <img src="{{ trip.cover_image }}" alt="{{ trip.title }}">
+                    <div class="trip-card-badges">
+                        <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+                        <span class="badge badge-cost">{{ trip.total_cost|currency }}</span>
+                    </div>
+                </div>
+
+                <div class="trip-card-body">
+                    <div class="trip-card-meta">
+                        <span><i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }}</span>
+                        <span><i class="fa-solid fa-route"></i> {{ trip.duration_days }} days</span>
+                        <span><i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} stops</span>
+                    </div>
+
+                    <h3 class="trip-card-title">{{ trip.title }}</h3>
+                    <p class="trip-card-desc">{{ trip.description or 'Custom itinerary planned with GlobeTrotter.' }}</p>
+
+                    <!-- Stops preview pills -->
+                    {% if trip.stops %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem;">
+                        {% for stop in trip.stops[:3] %}
+                            <span class="badge badge-category" style="font-size: 0.75rem;">
+                                {{ stop.display_city_name }}
+                            </span>
+                        {% endfor %}
+                        {% if trip.stops|length > 3 %}
+                            <span class="badge" style="background: #f1f5f9; color: var(--text-muted); font-size: 0.75rem;">
+                                +{{ trip.stops|length - 3 }} more
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="trip-card-stats" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-eye"></i> View Itinerary
+                        </a>
+                        <a href="{{ url_for('itinerary.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm" title="Edit Builder">
+                            <i class="fa-solid fa-pen"></i> Builder
+                        </a>
+                        <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-outline btn-sm" title="Cost & Budget">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </a>
+                        <a href="{{ url_for('itinerary.trip_calendar', trip_id=trip.id) }}" class="btn btn-outline btn-sm" title="Calendar View">
+                            <i class="fa-regular fa-calendar-days"></i>
+                        </a>
+                        <form action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}" method="POST" onsubmit="return confirm('Permanently delete this trip?');" style="display: inline;">
+                            <button type="submit" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3;" title="Delete Trip">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="padding: 4rem 2rem; text-align: center;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2.2rem;">
+                <i class="fa-solid fa-suitcase-rolling"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; margin-bottom: 0.5rem;">No trips found</h2>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+                {% if search_query %}
+                    No trips match your search query "{{ search_query }}". Try clearing the filter.
+                {% else %}
+                    You haven't created any trips yet. Start planning your first dream multi-city journey now!
+                {% endif %}
+            </p>
+            <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-plus-circle"></i> Plan a New Trip
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function filterTab(status, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const items = document.querySelectorAll('.trip-item');
+    items.forEach(item => {
+        if (status === 'all' || item.dataset.status === status) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

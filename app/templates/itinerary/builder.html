@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}Itinerary Builder — {{ trip.title }}{% endblock %}
+
+{% block content %}
+<!-- Screen 5: Itinerary Builder Screen (Wireframe Screen 5) -->
+<div class="container" style="padding: 2rem 1.5rem 4rem;">
+    <!-- Top Header & Navigation Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h1 style="font-size: 1.9rem;">{{ trip.title }}</h1>
+                <span class="badge badge-{{ trip.status }}">{{ trip.status }}</span>
+                <span class="badge badge-{{ trip.visibility }}">{{ trip.visibility }}</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                <i class="fa-regular fa-calendar"></i> {{ trip.start_date|date_format('%b %d') }} - {{ trip.end_date|date_format('%b %d, %Y') }} 
+                ({{ trip.duration_days }} days) &bull; <i class="fa-solid fa-location-dot"></i> {{ trip.stops|length }} Stops
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-eye"></i> View Itinerary Timeline
+            </a>
+            <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-chart-pie"></i> Budget Breakdown
+            </a>
+            <a href="{{ url_for('itinerary.trip_calendar', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fa-regular fa-calendar-days"></i> Calendar
+            </a>
+            <a href="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-gear"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="builder-layout">
+        <!-- Main Stops / Sections Column -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h2 style="font-size: 1.3rem;">Trip Stops & Daily Sections</h2>
+                <button onclick="openAddStopModal()" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-plus"></i> Add Stop / Destination
+                </button>
+            </div>
+
+            <div id="stops-list">
+                {% if trip.stops %}
+                    {% for stop in trip.stops %}
+                    <div id="stop-card-{{ stop.id }}" class="builder-stop-card" data-stop-id="{{ stop.id }}">
+                        <!-- Stop Header (Section X) -->
+                        <div class="builder-stop-header">
+                            <div style="display: flex; align-items: center;">
+                                <div class="stop-drag-handle">
+                                    <button class="btn btn-sm btn-icon" onclick="moveStop({{ stop.id }}, 'up')" title="Move Up" style="padding: 2px 6px;">▲</button>
+                                    <button class="btn btn-sm btn-icon" onclick="moveStop({{ stop.id }}, 'down')" title="Move Down" style="padding: 2px 6px;">▼</button>
+                                </div>
+                                <div>
+                                    <span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: var(--primary);">
+                                        Stop {{ loop.index }}
+                                    </span>
+                                    <h3 style="font-size: 1.15rem; margin-top: -2px;">
+                                        {{ stop.display_city_name }}
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="badge badge-cost cost-val" data-cost="{{ stop.transport_cost + stop.accommodation_cost }}">
+                                    Stay+Travel: ${{ "%.2f"|format(stop.transport_cost + stop.accommodation_cost) }}
+                                </span>
+                                <button onclick="deleteStop({{ stop.id }})" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3; padding: 0.3rem 0.6rem;" title="Delete Stop">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stop Details Row -->
+                        <div style="padding: 1.25rem; background: #ffffff; border-bottom: 1px solid var(--border-light);">
+                            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                                <div>
+                                    <strong><i class="fa-regular fa-calendar"></i> Date Range:</strong> 
+                                    {{ stop.arrival_date|date_format('%b %d') }} to {{ stop.departure_date|date_format('%b %d, %Y') }} ({{ stop.duration_days }} days)
+                                </div>
+                                <div>
+                                    <strong><i class="fa-solid fa-hotel"></i> Stay:</strong> 
+                                    {{ stop.accommodation_name or 'Not specified' }} (${{ "%.2f"|format(stop.accommodation_cost) }})
+                                </div>
+                                <div>
+                                    <strong><i class="fa-solid fa-plane"></i> Transport:</strong> 
+                                    {{ stop.transport_mode }} (${{ "%.2f"|format(stop.transport_cost) }})
+                                </div>
+                            </div>
+                            {% if stop.notes %}
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic;">
+                                    "{{ stop.notes }}"
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Activities List inside Stop -->
+                        <div style="padding: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-secondary);">
+                                    Activities in {{ stop.display_city_name }} ({{ stop.activities|length }})
+                                </h4>
+                                <button onclick="openAddActivityModal({{ stop.id }}, {{ stop.city_id or 'null' }})" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
+                                    <i class="fa-solid fa-plus"></i> Add Activity
+                                </button>
+                            </div>
+
+                            <div id="activities-list-{{ stop.id }}" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                {% if stop.activities %}
+                                    {% for act in stop.activities %}
+                                    <div id="act-item-{{ act.id }}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <img src="{{ act.display_image }}" alt="" style="width: 42px; height: 42px; border-radius: var(--radius-sm); object-fit: cover;">
+                                            <div>
+                                                <div style="font-weight: 700; font-size: 0.9rem;">{{ act.display_title }}</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    Day {{ act.day_number }} &bull; {{ act.time_slot }} &bull; 
+                                                    <span class="badge badge-category" style="font-size: 0.65rem; padding: 1px 5px;">{{ act.category }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <span class="activity-cost-badge cost-val" data-cost="{{ act.cost }}">
+                                                {{ act.cost|currency }}
+                                            </span>
+                                            <button onclick="deleteActivity({{ act.id }})" class="btn btn-sm btn-icon" style="color: var(--text-muted);" title="Remove">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div style="text-align: center; padding: 1rem; border: 1px dashed var(--border-light); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted);">
+                                        No activities added yet for this stop. Click <strong>+ Add Activity</strong> to populate your schedule!
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="card" style="padding: 3rem 2rem; text-align: center;">
+                        <i class="fa-solid fa-map-pin" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">Start by adding your first destination stop</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 450px; margin: 0 auto 1.5rem;">
+                            Each stop represents a city or region you will visit during your trip, with dates, hotel info, and exciting activities.
+                        </p>
+                        <button onclick="openAddStopModal()" class="btn btn-primary btn-lg">
+                            <i class="fa-solid fa-plus-circle"></i> Add First Stop
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Wireframe CTA: Add another Section -->
+            {% if trip.stops %}
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <button onclick="openAddStopModal()" class="btn btn-secondary btn-lg" style="width: 100%; border: 2px dashed var(--primary); color: var(--primary); background: #ffffff;">
+                    <i class="fa-solid fa-plus"></i> Add Another Stop / Section
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar: Live Cost & Summary -->
+        <div>
+            <div class="card" style="position: sticky; top: 90px; padding: 1.5rem;">
+                <h3 style="font-size: 1.15rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-light);">
+                    Trip Cost Summary
+                </h3>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Estimated Total</span>
+                    <div id="builder-total-cost" style="font-size: 2rem; font-weight: 800; color: var(--primary);">
+                        {{ trip.total_cost|currency }}
+                    </div>
+                    {% if trip.target_budget and trip.target_budget > 0 %}
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                            Target Budget: <strong>{{ trip.target_budget|currency }}</strong>
+                            {% if trip.is_overbudget %}
+                                <span style="color: var(--accent-rose); font-weight: 700;">(Over by {{ (trip.total_cost - trip.target_budget)|currency }})</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fa-solid fa-plane"></i> Transport:</span>
+                        <strong>{{ trip.breakdown_by_category['transport']|currency }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fa-solid fa-hotel"></i> Stay/Accommodation:</span>
+                        <strong>{{ trip.breakdown_by_category['stay']|currency }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fa-solid fa-ticket"></i> Activities:</span>
+                        <strong>{{ trip.breakdown_by_category['activities']|currency }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fa-solid fa-utensils"></i> Meals & Dining:</span>
+                        <strong>{{ trip.breakdown_by_category['meals']|currency }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fa-solid fa-receipt"></i> Other Expenses:</span>
+                        <strong>{{ trip.breakdown_by_category['other']|currency }}</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="{{ url_for('itinerary.view_itinerary', trip_id=trip.id) }}" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-calendar-check"></i> View Full Timeline
+                    </a>
+                    <a href="{{ url_for('budget.view_budget', trip_id=trip.id) }}" class="btn btn-secondary" style="width: 100%;">
+                        <i class="fa-solid fa-chart-pie"></i> Detailed Charts & Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Stop -->
+<div id="addStopModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;"><i class="fa-solid fa-map-pin"></i> Add Trip Stop (City)</h3>
+            <button class="alert-close" onclick="closeModal('addStopModal')">&times;</button>
+        </div>
+        <form id="addStopForm" onsubmit="handleAddStopSubmit(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="city_select">Select Destination City</label>
+                    <select id="city_select" name="city_id" class="form-control" onchange="document.getElementById('custom_city_name').value = ''">
+                        <option value="">-- Choose from popular cities or enter custom below --</option>
+                        {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city.name }}, {{ city.country }} ({{ city.region }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="custom_city_name">Or Enter Custom Destination Name</label>
+                    <input type="text" id="custom_city_name" name="custom_city_name" class="form-control" placeholder="e.g. Amalfi Coast, Lucerne, Hakone...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="stop_arrival">Arrival Date *</label>
+                        <input type="date" id="stop_arrival" name="arrival_date" class="form-control" value="{{ trip.start_date.isoformat() }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stop_departure">Departure Date *</label>
+                        <input type="date" id="stop_departure" name="departure_date" class="form-control" value="{{ trip.end_date.isoformat() }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="accommodation_name">Hotel / Stay Name</label>
+                        <input type="text" id="accommodation_name" name="accommodation_name" class="form-control" placeholder="e.g. Marriott, Airbnb, Ryokan...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="accommodation_cost">Accommodation Cost ($)</label>
+                        <input type="number" step="5" min="0" id="accommodation_cost" name="accommodation_cost" class="form-control" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="transport_mode">Transport Mode</label>
+                        <select id="transport_mode" name="transport_mode" class="form-control">
+                            <option value="Flight">Flight</option>
+                            <option value="Train / Rail">Train / Rail</option>
+                            <option value="Car / Rental">Car / Rental</option>
+                            <option value="Bus">Bus</option>
+                            <option value="Ferry / Cruise">Ferry / Cruise</option>
+                            <option value="Walking / Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="transport_cost">Transport Cost ($)</label>
+                        <input type="number" step="5" min="0" id="transport_cost" name="transport_cost" class="form-control" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="stop_notes">Stop Notes</label>
+                    <textarea id="stop_notes" name="notes" class="form-control" placeholder="Key tips, check-in details, booking references..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addStopModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Stop to Itinerary</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Add Activity -->
+<div id="addActivityModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 style="font-size: 1.25rem;"><i class="fa-solid fa-person-hiking"></i> Add Activity to Stop</h3>
+            <button class="alert-close" onclick="closeModal('addActivityModal')">&times;</button>
+        </div>
+        <form id="addActivityForm" onsubmit="handleAddActivitySubmit(event)">
+            <input type="hidden" id="activity_stop_id" name="stop_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="catalog_activity_select">Recommended City Activities</label>
+                    <select id="catalog_activity_select" name="activity_id" class="form-control" onchange="handleCatalogSelectChange(this)">
+                        <option value="">-- Choose from recommendations or enter custom --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="custom_title">Activity Title *</label>
+                    <input type="text" id="custom_title" name="custom_title" class="form-control" placeholder="e.g. Eiffel Tower Summit, Sushi Masterclass..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="day_number">Day Number</label>
+                        <input type="number" min="1" max="{{ trip.duration_days }}" id="day_number" name="day_number" class="form-control" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="time_slot">Time / Slot</label>
+                        <select id="time_slot" name="time_slot" class="form-control">
+                            <option value="Morning">Morning (09:00 AM)</option>
+                            <option value="Afternoon">Afternoon (02:00 PM)</option>
+                            <option value="Evening">Evening (06:00 PM)</option>
+                            <option value="Night">Night (09:00 PM)</option>
+                            <option value="All Day">All Day</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="act_category">Category</label>
+                        <select id="act_category" name="category" class="form-control">
+                            <option value="Sightseeing">Sightseeing</option>
+                            <option value="Food & Dining">Food & Dining</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="Culture & History">Culture & History</option>
+                            <option value="Leisure & Wellness">Leisure & Wellness</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Nightlife">Nightlife</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="act_cost">Estimated Cost ($)</label>
+                        <input type="number" step="5" min="0" id="act_cost" name="cost" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="custom_description">Description & Notes</label>
+                    <textarea id="custom_description" name="custom_description" class="form-control" placeholder="Activity details, booking times, meeting points..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addActivityModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Activity</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/builder.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initBuilder({{ trip.id }});
+    });
+</script>
+{% endblock %}

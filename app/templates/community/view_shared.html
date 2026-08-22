@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ trip.title }} — Shared Itinerary{% endblock %}
+
+{% block content %}
+<!-- Screen 11: Shared/Public Itinerary View Screen -->
+<div class="container" style="padding: 2.5rem 1.5rem 4rem; max-width: 1000px;">
+    <!-- Public Banner -->
+    <div class="card" style="margin-bottom: 2.5rem; overflow: hidden; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+        <div style="position: relative; height: 260px;">
+            <img src="{{ trip.cover_image }}" alt="{{ trip.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem; color: #ffffff;">
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span class="badge" style="background: rgba(255,255,255,0.2); color: #ffffff;">
+                        <i class="fa-solid fa-earth-americas"></i> Shared Travel Plan
+                    </span>
+                    <span class="badge badge-cost">{{ trip.total_cost|currency }} Total</span>
+                </div>
+                <h1 style="font-size: 2.4rem; color: #ffffff; margin-bottom: 0.3rem;">{{ trip.title }}</h1>
+                <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.95rem;">
+                    Curated by <strong>{{ trip.user.full_name }}</strong> &bull; {{ trip.duration_days }} Days &bull; {{ trip.stops|length }} Destinations
+                </p>
+            </div>
+        </div>
+
+        <!-- Action Bar: Copy Trip + Share Links -->
+        <div style="padding: 1.5rem 2rem; background: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-light);">
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <button class="btn btn-sm btn-secondary btn-like-trip" data-trip-id="{{ trip.id }}">
+                    <i class="fa-{% if is_liked %}solid fa-heart text-rose{% else %}regular fa-heart{% endif %}"></i>
+                    <span class="like-count">{{ trip.likes|length }}</span> Likes
+                </button>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">
+                    Estimated Avg: <strong style="color: var(--accent-emerald);">{{ trip.per_day_cost|currency }}/day</strong>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                {% if current_user.is_authenticated %}
+                <form action="{{ url_for('trips.clone_trip', trip_id=trip.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-copy"></i> Copy Trip to My Account
+                    </button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-user-plus"></i> Sign Up to Copy Trip
+                </a>
+                {% endif %}
+
+                <!-- Social Share Links -->
+                <div style="display: flex; gap: 0.4rem;">
+                    <button onclick="copyToClipboard('{{ share_url }}', 'Public link copied!')" class="btn btn-secondary btn-sm" title="Copy URL">
+                        <i class="fa-solid fa-link"></i>
+                    </button>
+                    <a href="https://twitter.com/intent/tweet?text=Check out this travel itinerary: {{ trip.title }}&url={{ share_url }}" target="_blank" class="btn btn-secondary btn-sm" title="Share on Twitter/X">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text=Check out this travel plan: {{ trip.title }} {{ share_url }}" target="_blank" class="btn btn-secondary btn-sm" title="Share on WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if trip.description %}
+        <div style="padding: 1.5rem 2rem; background: #f8fafc;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.3rem; color: var(--text-muted);">About this Trip:</h4>
+            <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;">{{ trip.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Read-Only Day-by-Day Stops & Activities -->
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Trip Route & Stops</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Overview of destinations and scheduled excursions</p>
+        </div>
+    </div>
+
+    {% if trip.stops %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 3rem;">
+            {% for stop in trip.stops %}
+            <div class="card" style="overflow: hidden;">
+                <div style="display: flex; flex-wrap: wrap; background: #ffffff;">
+                    <div style="width: 220px; min-height: 140px; position: relative;">
+                        <img src="{{ stop.stop_image }}" alt="{{ stop.display_city_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span class="badge" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #ffffff;">
+                            Stop {{ loop.index }}
+                        </span>
+                    </div>
+
+                    <div style="flex: 1; min-width: 280px; padding: 1.25rem 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+                            <h3 style="font-size: 1.25rem;">{{ stop.display_city_name }}</h3>
+                            <span class="badge badge-cost">
+                                Stay: ${{ "%.2f"|format(stop.accommodation_cost) }} &bull; Travel: ${{ "%.2f"|format(stop.transport_cost) }}
+                            </span>
+                        </div>
+
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                            <i class="fa-regular fa-calendar"></i> {{ stop.arrival_date|date_format('%b %d') }} to {{ stop.departure_date|date_format('%b %d') }} ({{ stop.duration_days }} days)
+                            &bull; Mode: {{ stop.transport_mode }}
+                        </p>
+
+                        {% if stop.activities %}
+                        <div style="border-top: 1px solid var(--border-light); padding-top: 0.75rem; margin-top: 0.5rem;">
+                            <h5 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Activities:</h5>
+                            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                {% for act in stop.activities %}
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; background: #f8fafc; padding: 0.4rem 0.75rem; border-radius: var(--radius-sm);">
+                                    <span>
+                                        <strong>Day {{ act.day_number }}:</strong> {{ act.display_title }}
+                                        <small style="color: var(--text-muted);">({{ act.time_slot }} - {{ act.category }})</small>
+                                    </span>
+                                    <span style="font-weight: 700; color: #059669;">
+                                        {{ act.cost|currency }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Bottom CTA -->
+    <div class="card" style="padding: 2.5rem; text-align: center; background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);">
+        <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Love this itinerary?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+            Copy this plan directly to your dashboard to customize stops, adjust dates, or add your own favorite activities!
+        </p>
+        {% if current_user.is_authenticated %}
+        <form action="{{ url_for('trips.clone_trip', trip_id=trip.id) }}" method="POST">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-copy"></i> Clone Itinerary to My Trips
+            </button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i> Join GlobeTrotter to Copy Itinerary
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

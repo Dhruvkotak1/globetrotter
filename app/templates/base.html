@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GlobeTrotter - Empowering Personalized Travel Planning{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <a href="{{ url_for('index') }}" class="brand-logo">
+                <i class="fa-solid fa-earth-americas"></i> GlobeTrotter
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-compass"></i> Explore</a></li>
+                <li><a href="{{ url_for('itinerary.city_search') }}" class="nav-link"><i class="fa-solid fa-city"></i> Cities</a></li>
+                <li><a href="{{ url_for('itinerary.activity_search') }}" class="nav-link"><i class="fa-solid fa-person-hiking"></i> Activities</a></li>
+                <li><a href="{{ url_for('community.index') }}" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('trips.my_trips') }}" class="nav-link"><i class="fa-solid fa-suitcase-rolling"></i> My Trips</a></li>
+                    {% if current_user.is_admin %}
+                        <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"><i class="fa-solid fa-chart-line"></i> Admin</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            
+            <div class="nav-actions">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-plus"></i> Plan a Trip
+                    </a>
+                    
+                    <a href="{{ url_for('auth.profile') }}" class="nav-user-menu" title="{{ current_user.username }}">
+                        {% if current_user.avatar and current_user.avatar != 'default_avatar.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" class="user-avatar-sm" alt="{{ current_user.username }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="user-avatar-sm" alt="Avatar">
+                        {% endif %}
+                    </a>
+                    
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" title="Log Out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Log In</a>
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-sm">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Flash Alerts Container -->
+    <div class="container alerts-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="alert-close">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main style="flex: 1;">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div>
+                <div class="brand-logo" style="margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-earth-americas"></i> GlobeTrotter
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Empowering personalized multi-city travel planning, budgets, and community discovery.</p>
+            </div>
+            
+            <div style="display: flex; gap: 2rem; font-size: 0.9rem;">
+                <a href="{{ url_for('itinerary.city_search') }}">Explore Cities</a>
+                <a href="{{ url_for('itinerary.activity_search') }}">Find Activities</a>
+                <a href="{{ url_for('community.index') }}">Community Trips</a>
+                <a href="{{ url_for('auth.login') }}">Account</a>
+            </div>
+            
+            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                &copy; 2026 GlobeTrotter Platform. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
